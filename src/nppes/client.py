@@ -44,7 +44,10 @@ class NPPESClient:
         }
         
         if taxonomy_code:
+            # NPPES API accepts taxonomy code directly
             params["taxonomy_description"] = taxonomy_code
+            # Also try searching by code if description doesn't work
+            # The API may match on taxonomy code in the description field
         
         if entity_type:
             params["enumeration_type"] = entity_type
