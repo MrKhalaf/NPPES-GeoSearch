@@ -6,9 +6,10 @@ A Python GUI application for testing and exploring NPPES API searches with geogr
 
 - Search NPPES providers by CPT code and ZIP code
 - Automatic taxonomy mapping from CPT codes
-- Precomputed ZIP code neighbor search
+- Dynamic ZIP code neighbor search (within 20 miles)
 - Filter results to physicians only
 - Interactive GUI for exploring search results
+- API call logging and progress tracking
 
 ## Installation
 

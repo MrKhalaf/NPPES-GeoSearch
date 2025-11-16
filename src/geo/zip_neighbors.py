@@ -1,37 +1,7 @@
-"""ZIP code neighbor loading and iteration utilities."""
+"""ZIP code neighbor utilities using uszipcode library."""
 
-import json
-import os
-from typing import List, Set, Iterator, Optional
-from pathlib import Path
+from typing import List, Iterator, Optional
 from .zip_neighbor_finder import ZIPNeighborFinder
-
-
-def load_zip_neighbors(data_path: Optional[str] = None) -> dict:
-    """Load ZIP code neighbors from JSON file.
-    
-    Args:
-        data_path: Optional path to JSON file. If None, looks in data/ directory.
-        
-    Returns:
-        Dictionary mapping ZIP codes to lists of neighbor ZIP codes
-        
-    Raises:
-        FileNotFoundError: If the data file cannot be found
-        json.JSONDecodeError: If the file is not valid JSON
-    """
-    if data_path is None:
-        # Default to data directory in project root
-        project_root = Path(__file__).parent.parent.parent
-        data_path = project_root / "data" / "zip_neighbors_20mi.json"
-    
-    data_path = Path(data_path)
-    
-    if not data_path.exists():
-        raise FileNotFoundError(f"ZIP neighbors data file not found: {data_path}")
-    
-    with open(data_path, 'r') as f:
-        return json.load(f)
 
 
 # Global neighbor finder instance (lazy-loaded)
@@ -39,56 +9,55 @@ _neighbor_finder: Optional[ZIPNeighborFinder] = None
 
 
 def _get_neighbor_finder() -> Optional[ZIPNeighborFinder]:
-    """Get or create the ZIP neighbor finder instance."""
+    """Get or create the ZIP neighbor finder instance.
+    
+    Returns:
+        ZIPNeighborFinder instance or None if uszipcode not available
+    """
     global _neighbor_finder
     if _neighbor_finder is None:
         try:
             _neighbor_finder = ZIPNeighborFinder()
         except Exception as e:
             print(f"Warning: Could not initialize ZIP neighbor finder: {e}")
+            print("  Install uszipcode library: pip install uszipcode")
             return None
     return _neighbor_finder
 
 
-def get_neighbors(zip_code: str, neighbors_data: dict, use_dynamic: bool = True) -> List[str]:
-    """Get neighbor ZIP codes, checking both file data and dynamic lookup.
+def get_neighbors(zip_code: str, radius_miles: float = 20.0, max_results: int = 30) -> List[str]:
+    """Get neighbor ZIP codes within radius using uszipcode.
     
     Args:
         zip_code: 5-digit ZIP code
-        neighbors_data: Dictionary mapping ZIP codes to neighbor lists (from file)
-        use_dynamic: If True, use dynamic lookup when file data not available
+        radius_miles: Search radius in miles (default: 20)
+        max_results: Maximum number of neighbors to return (default: 30)
         
     Returns:
-        List of neighbor ZIP codes
+        List of neighbor ZIP codes (limited to max_results)
     """
     zip_str = str(zip_code).strip()
     
-    # First check file data
-    neighbors = neighbors_data.get(zip_str, [])
+    finder = _get_neighbor_finder()
+    if not finder:
+        return []
     
-    # If no neighbors found in file and dynamic lookup enabled, try dynamic lookup
-    if not neighbors and use_dynamic:
-        finder = _get_neighbor_finder()
-        if finder:
-            try:
-                dynamic_neighbors = finder.find_neighbors(zip_str, radius_miles=20.0)
-                if dynamic_neighbors:
-                    print(f"Found {len(dynamic_neighbors)} neighbors for ZIP {zip_str} using dynamic lookup")
-                    neighbors = dynamic_neighbors
-            except Exception as e:
-                print(f"Error in dynamic neighbor lookup for ZIP {zip_str}: {e}")
-    
-    return neighbors
+    try:
+        neighbors = finder.find_neighbors(zip_str, radius_miles=radius_miles, max_results=max_results)
+        return neighbors
+    except Exception as e:
+        print(f"Error finding neighbors for ZIP {zip_str}: {e}")
+        return []
 
 
-def iter_zip_search_set(zip_code: str, neighbors_data: dict, include_neighbors: bool = True, use_dynamic: bool = True) -> Iterator[str]:
+def iter_zip_search_set(zip_code: str, include_neighbors: bool = True, radius_miles: float = 20.0, max_neighbors: int = 30) -> Iterator[str]:
     """Iterate through ZIP codes to search, starting with origin then neighbors.
     
     Args:
         zip_code: Origin 5-digit ZIP code
-        neighbors_data: Dictionary mapping ZIP codes to neighbor lists
         include_neighbors: If True, include neighbors; if False, only origin
-        use_dynamic: If True, use dynamic lookup when file data not available
+        radius_miles: Search radius in miles for neighbors (default: 20)
+        max_neighbors: Maximum number of neighbors to include (default: 30)
         
     Yields:
         ZIP codes in search order (origin first, then neighbors)
@@ -100,22 +69,21 @@ def iter_zip_search_set(zip_code: str, neighbors_data: dict, include_neighbors: 
     
     # Then yield neighbors if requested
     if include_neighbors:
-        neighbors = get_neighbors(zip_str, neighbors_data, use_dynamic=use_dynamic)
+        neighbors = get_neighbors(zip_str, radius_miles=radius_miles, max_results=max_neighbors)
         for neighbor in neighbors:
             yield neighbor
 
 
-def get_search_set(zip_code: str, neighbors_data: dict, include_neighbors: bool = True, use_dynamic: bool = True) -> List[str]:
+def get_search_set(zip_code: str, include_neighbors: bool = True, radius_miles: float = 20.0, max_neighbors: int = 30) -> List[str]:
     """Get the full list of ZIP codes to search.
     
     Args:
         zip_code: Origin 5-digit ZIP code
-        neighbors_data: Dictionary mapping ZIP codes to neighbor lists
         include_neighbors: If True, include neighbors; if False, only origin
-        use_dynamic: If True, use dynamic lookup when file data not available
+        radius_miles: Search radius in miles for neighbors (default: 20)
+        max_neighbors: Maximum number of neighbors to include (default: 30)
         
     Returns:
         List of ZIP codes in search order
     """
-    return list(iter_zip_search_set(zip_code, neighbors_data, include_neighbors, use_dynamic))
-
+    return list(iter_zip_search_set(zip_code, include_neighbors, radius_miles, max_neighbors))

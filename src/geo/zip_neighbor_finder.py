@@ -41,17 +41,12 @@ class ZIPNeighborFinder:
             from uszipcode import SearchEngine
             search = SearchEngine()
             
-            # Try to load coordinates for common ZIP codes
-            # This is a simplified approach - in production you'd want to cache this
-            print("Loading ZIP code coordinates from uszipcode library...")
-            # We'll load on-demand instead of preloading all
             self.search_engine = search
             self.use_library = True
         except ImportError:
-            print("uszipcode library not found. Install with: pip install uszipcode")
-            print("  Falling back to file-based neighbor lookup only.")
-            self.use_library = False
-            self.search_engine = None
+            raise ImportError(
+                "uszipcode library not found. Install with: pip install uszipcode"
+            )
     
     def get_zip_coordinates(self, zip_code: str) -> Optional[tuple]:
         """Get latitude and longitude for a ZIP code.
@@ -74,15 +69,16 @@ class ZIPNeighborFinder:
         
         return None
     
-    def find_neighbors(self, zip_code: str, radius_miles: float = 20.0) -> List[str]:
-        """Find neighboring ZIP codes within radius.
+    def find_neighbors(self, zip_code: str, radius_miles: float = 20.0, max_results: int = 30) -> List[str]:
+        """Find neighboring ZIP codes within radius, reducing radius if too many found.
         
         Args:
             zip_code: Origin 5-digit ZIP code
-            radius_miles: Search radius in miles (default: 20)
+            radius_miles: Starting search radius in miles (default: 20)
+            max_results: Maximum number of neighbors to return (default: 30)
             
         Returns:
-            List of neighboring ZIP codes
+            List of neighboring ZIP codes (within adjusted radius to get <= max_results)
         """
         if not self.use_library:
             return []
@@ -92,64 +88,65 @@ class ZIPNeighborFinder:
             return []
         
         origin_lat, origin_lon = origin_coords
-        neighbors = []
         
-        # Search nearby ZIP codes
-        # Note: This is a simplified approach. For production, you'd want to:
-        # 1. Use a spatial index or database
-        # 2. Cache results
-        # 3. Use a more efficient search algorithm
+        # Try progressively smaller radii until we get <= max_results neighbors
+        radii_to_try = [radius_miles, 10.0, 5.0, 2.0]
         
-        # Search nearby ZIP codes using coordinate-based search
-        try:
-            # Use the search engine to find ZIP codes within radius
-            # Note: uszipcode's by_coordinates may have different API, so we'll use a different approach
-            # Search all ZIP codes and filter by distance
-            # This is not efficient but works for now
-            
-            # Get a sample of nearby ZIP codes by searching a grid
-            # For better performance, you'd want to use a spatial database
-            search = self.search_engine
-            
-            # Search in a grid pattern around the origin
-            # This is a simplified approach - in production use a spatial index
-            lat_step = radius_miles / 69.0  # Approximate miles per degree latitude
-            lon_step = radius_miles / (69.0 * abs(math.cos(math.radians(origin_lat))))
-            
-            checked_zips = set()
-            checked_zips.add(zip_code)  # Don't include origin
-            
-            # Search in a grid around origin
-            for lat_offset in [-lat_step, 0, lat_step]:
-                for lon_offset in [-lon_step, 0, lon_step]:
-                    search_lat = origin_lat + lat_offset
-                    search_lon = origin_lon + lon_offset
+        for current_radius in radii_to_try:
+            try:
+                search = self.search_engine
+                
+                # Search for ZIP codes within current radius
+                # Fetch more than max_results to account for origin being in results
+                nearby_results = search.by_coordinates(
+                    origin_lat, origin_lon, 
+                    radius=current_radius, 
+                    returns=max_results + 10
+                )
+                
+                if nearby_results:
+                    neighbors = []
+                    for result in nearby_results:
+                        # Skip the origin ZIP code itself
+                        if result.zipcode and result.zipcode != zip_code:
+                            # Verify distance
+                            if result.lat and result.lng:
+                                distance = haversine_distance(
+                                    origin_lat, origin_lon,
+                                    result.lat, result.lng
+                                )
+                                if distance <= current_radius:
+                                    neighbors.append(result.zipcode)
                     
-                    try:
-                        # Try to find ZIP codes near this point
-                        # uszipcode may have different methods, so we'll use a simple approach
-                        # Search for ZIP codes by coordinates
-                        nearby = search.by_coordinates(search_lat, search_lon, radius=radius_miles * 1.5)
+                    # If we have <= max_results neighbors, return them
+                    if len(neighbors) <= max_results:
+                        if current_radius < radius_miles:
+                            print(f"Reduced radius to {current_radius} miles to get {len(neighbors)} neighbors (target: {max_results})")
+                        return neighbors
+                    # Otherwise, continue to next smaller radius
                         
-                        if nearby:
-                            for result in nearby:
-                                if result.zipcode and result.zipcode not in checked_zips:
-                                    checked_zips.add(result.zipcode)
-                                    if result.lat and result.lng:
-                                        distance = haversine_distance(
-                                            origin_lat, origin_lon,
-                                            result.lat, result.lng
-                                        )
-                                        if distance <= radius_miles:
-                                            neighbors.append(result.zipcode)
-                    except Exception:
-                        # If coordinate search doesn't work, skip this point
-                        continue
-                        
-        except Exception as e:
-            print(f"Error finding neighbors for ZIP {zip_code}: {e}")
-            import traceback
-            traceback.print_exc()
+            except Exception as e:
+                print(f"Error finding neighbors for ZIP {zip_code} at radius {current_radius}: {e}")
+                import traceback
+                traceback.print_exc()
+                continue
         
-        return neighbors
+        # If we still have too many even at 2 miles, just return the first max_results
+        # This shouldn't happen often, but handle it gracefully
+        if nearby_results:
+            neighbors = []
+            for result in nearby_results:
+                if result.zipcode and result.zipcode != zip_code:
+                    if result.lat and result.lng:
+                        distance = haversine_distance(
+                            origin_lat, origin_lon,
+                            result.lat, result.lng
+                        )
+                        if distance <= 2.0:
+                            neighbors.append(result.zipcode)
+                            if len(neighbors) >= max_results:
+                                break
+            return neighbors
+        
+        return []
 

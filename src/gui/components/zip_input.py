@@ -3,7 +3,7 @@
 import tkinter as tk
 from tkinter import ttk
 from typing import Optional, Callable, List
-from ...geo.zip_neighbors import load_zip_neighbors, get_search_set
+from ...geo.zip_neighbors import get_search_set
 
 
 class ZIPInput:
@@ -18,19 +18,7 @@ class ZIPInput:
         """
         self.parent = parent
         self.on_change = on_change
-        self.neighbors_data = {}
         self.include_neighbors = True
-        
-        # Load neighbors data
-        try:
-            self.neighbors_data = load_zip_neighbors()
-        except FileNotFoundError as e:
-            # If file not found, use empty dict
-            print(f"Warning: ZIP neighbors file not found: {e}")
-            print("  Neighbor search will be limited. Place zip_neighbors_20mi.json in data/ directory.")
-        except Exception as e:
-            print(f"Warning: Error loading ZIP neighbors: {e}")
-            self.neighbors_data = {}
         
         # Create frame
         self.frame = ttk.Frame(parent)
@@ -92,7 +80,8 @@ class ZIPInput:
         zip_code = zip_code[:5]  # Take first 5 digits
         
         try:
-            search_set = get_search_set(zip_code, self.neighbors_data, self.include_neighbors)
+            # Limit to 30 neighbors to avoid too many API calls
+            search_set = get_search_set(zip_code, self.include_neighbors, radius_miles=20.0, max_neighbors=30)
             origin = search_set[0] if search_set else zip_code
             neighbors = search_set[1:] if len(search_set) > 1 else []
             
@@ -102,12 +91,15 @@ class ZIPInput:
                     neighbors_str += f", ... (+{len(neighbors) - 10} more)"
                 text = f"Origin: {origin} | Neighbors: {neighbors_str} | Total: {len(search_set)} ZIP codes"
             else:
-                text = f"Origin: {origin} | No neighbors found | Total: 1 ZIP code"
+                if self.include_neighbors:
+                    text = f"Origin: {origin} | Searching for neighbors... | Total: 1 ZIP code"
+                else:
+                    text = f"Origin: {origin} | Neighbors disabled | Total: 1 ZIP code"
             
             self.neighbors_label.config(text=text, foreground="black")
-        except Exception:
+        except Exception as e:
             self.neighbors_label.config(
-                text=f"Origin: {zip_code} | Neighbors: (error loading)",
+                text=f"Origin: {zip_code} | Error loading neighbors: {str(e)[:50]}",
                 foreground="orange"
             )
     
@@ -135,18 +127,11 @@ class ZIPInput:
         # Ensure checkbox state is synced
         self.include_neighbors = self.neighbors_var.get()
         
-        search_set = get_search_set(zip_code, self.neighbors_data, self.include_neighbors)
-        neighbors_found = len(search_set) - 1  # Subtract 1 for origin ZIP
-        
-        if self.include_neighbors and neighbors_found == 0 and zip_code not in self.neighbors_data:
-            print(f"WARNING: No neighbor data found for ZIP {zip_code} in neighbors file")
-            print(f"  Only searching origin ZIP. Add neighbor data to data/zip_neighbors_20mi.json")
-        
-        print(f"DEBUG ZIPInput: ZIP {zip_code}, include_neighbors={self.include_neighbors}, neighbors_found={neighbors_found}")
-        print(f"DEBUG ZIPInput: Search set: {search_set}")
+        # Limit to 30 neighbors to avoid too many API calls
+        search_set = get_search_set(zip_code, self.include_neighbors, radius_miles=20.0, max_neighbors=30)
+        print(f"DEBUG ZIPInput: ZIP {zip_code}, include_neighbors={self.include_neighbors}, found {len(search_set)} ZIP codes")
         return search_set
     
     def grid(self, **kwargs):
         """Grid the component frame."""
         self.frame.grid(**kwargs)
-
