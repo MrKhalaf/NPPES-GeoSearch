@@ -57,6 +57,9 @@ class ZIPInput:
         )
         self.neighbors_check.grid(row=0, column=2, sticky=tk.W)
         
+        # Update include_neighbors from checkbox state
+        self.include_neighbors = self.neighbors_var.get()
+        
         # Neighbors display
         self.neighbors_label = ttk.Label(
             self.frame,
@@ -129,8 +132,17 @@ class ZIPInput:
         if not zip_code:
             return []
         
+        # Ensure checkbox state is synced
+        self.include_neighbors = self.neighbors_var.get()
+        
         search_set = get_search_set(zip_code, self.neighbors_data, self.include_neighbors)
-        print(f"DEBUG ZIPInput: ZIP {zip_code}, include_neighbors={self.include_neighbors}, neighbors_data keys={list(self.neighbors_data.keys())[:5]}")
+        neighbors_found = len(search_set) - 1  # Subtract 1 for origin ZIP
+        
+        if self.include_neighbors and neighbors_found == 0 and zip_code not in self.neighbors_data:
+            print(f"WARNING: No neighbor data found for ZIP {zip_code} in neighbors file")
+            print(f"  Only searching origin ZIP. Add neighbor data to data/zip_neighbors_20mi.json")
+        
+        print(f"DEBUG ZIPInput: ZIP {zip_code}, include_neighbors={self.include_neighbors}, neighbors_found={neighbors_found}")
         print(f"DEBUG ZIPInput: Search set: {search_set}")
         return search_set
     
