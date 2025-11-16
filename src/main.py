@@ -253,6 +253,10 @@ def main():
     print("Initializing application...")
     app = NPPESGeoSearchApp(root)
     
+    # Force window to render immediately
+    root.update_idletasks()
+    root.update()
+    
     print("Application ready! GUI window should be visible.")
     print("Select a CPT code, enter a ZIP code, and click 'Search Providers' to begin.")
     
