@@ -150,8 +150,6 @@ class NPPESGeoSearchApp:
             # Create progress bar
             progress = ProgressBar(total_searches, desc="Searching providers")
             
-            search_count = 0
-            
             # Search each ZIP code
             for zip_idx, zip_code in enumerate(zip_codes):
                 # Update GUI progress
@@ -160,7 +158,6 @@ class NPPESGeoSearchApp:
                 
                 # Search with each taxonomy code
                 for tax_idx, taxonomy_code in enumerate(taxonomy_codes if taxonomy_codes else [None]):
-                    search_count += 1
                     tax_display = taxonomy_code or "all taxonomies"
                     progress.update(1, f"ZIP {zip_code} ({tax_display})")
                     
