@@ -101,8 +101,11 @@ class NPPESClient:
             
             # Extract basic info
             basic = entry.get("basic", {})
-            entity_type_code = basic.get("enumeration_type", "")
-            entity_type = "Individual" if entity_type_code == "1" else "Organization"
+            # Check both enumeration_type field and top-level enumeration_type
+            entity_type_code = basic.get("enumeration_type", "") or entry.get("enumeration_type", "")
+            # NPPES API returns "NPI-1" for individuals, "NPI-2" for organizations
+            # Also check for "1" or "NPI-1" pattern
+            entity_type = "Individual" if ("1" in entity_type_code or entity_type_code == "1") else "Organization"
             
             # Extract name
             name = ""
@@ -165,7 +168,12 @@ class NPPESClient:
                 entity_type=entity_type,
                 raw_data=entry
             )
-        except Exception:
+        except Exception as e:
+            # Log the error for debugging
+            import traceback
+            print(f"DEBUG: Error normalizing entry: {e}")
+            print(f"DEBUG: Entry keys: {list(entry.keys()) if isinstance(entry, dict) else 'Not a dict'}")
+            traceback.print_exc()
             return None
     
     def close(self):
