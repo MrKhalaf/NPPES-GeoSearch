@@ -31,10 +31,11 @@ class ProviderList:
         self.count_label = ttk.Label(header_frame, text="No results", font=("TkDefaultFont", 9, "bold"))
         self.count_label.grid(row=0, column=0, sticky=tk.W)
         
+        self.filter_var = tk.BooleanVar(value=filter_physicians)
         self.filter_check = ttk.Checkbutton(
             header_frame,
             text="Physicians Only",
-            variable=tk.BooleanVar(value=filter_physicians),
+            variable=self.filter_var,
             command=self._on_filter_toggle
         )
         self.filter_check.grid(row=0, column=1, sticky=tk.E)
@@ -72,8 +73,7 @@ class ProviderList:
     
     def _on_filter_toggle(self):
         """Handle filter toggle."""
-        var = self.filter_check.cget("variable")
-        self.filter_physicians = bool(var.get())
+        self.filter_physicians = self.filter_var.get()
         self._refresh_display()
     
     def set_providers(self, providers: List[Provider]):

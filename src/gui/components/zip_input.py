@@ -44,10 +44,11 @@ class ZIPInput:
         self.zip_entry.grid(row=0, column=1, sticky=tk.W, padx=(0, 10))
         self.zip_entry.bind("<KeyRelease>", self._on_zip_change)
         
+        self.neighbors_var = tk.BooleanVar(value=True)
         self.neighbors_check = ttk.Checkbutton(
             input_frame,
             text="Include Neighbors",
-            variable=tk.BooleanVar(value=True),
+            variable=self.neighbors_var,
             command=self._on_neighbors_toggle
         )
         self.neighbors_check.grid(row=0, column=2, sticky=tk.W)
@@ -71,8 +72,7 @@ class ZIPInput:
     
     def _on_neighbors_toggle(self):
         """Handle neighbors checkbox toggle."""
-        var = self.neighbors_check.cget("variable")
-        self.include_neighbors = bool(var.get())
+        self.include_neighbors = self.neighbors_var.get()
         zip_code = self.zip_var.get().strip()
         self._update_neighbors_display(zip_code)
     
