@@ -204,15 +204,21 @@ class NPPESGeoSearchApp:
                         print(f"  {error_msg}")
                         self.root.after(0, lambda m=error_msg: self.logs_view.log(m, "ERROR"))
                 
-                # Update results incrementally
-                self.root.after(0, lambda p=all_providers.copy(): self.provider_list.set_providers(p))
+                # Update results incrementally - use a function to capture the current state
+                current_providers = all_providers.copy()
+                self.root.after(0, lambda p=current_providers: self._update_provider_list(p))
             
             # Finish progress bar
             progress.finish(f"Complete - Found {len(all_providers)} total providers")
             print_step("Search complete", f"Total unique providers: {len(all_providers)}")
             
-            # Final update
-            self.root.after(0, lambda: self._search_complete(all_providers))
+            # Log final count
+            self.root.after(0, lambda: self.logs_view.log(f"Search complete: {len(all_providers)} total unique providers", "SUCCESS"))
+            
+            # Final update - ensure we update with final list
+            final_providers = all_providers.copy()
+            self.root.after(0, lambda p=final_providers: self._update_provider_list(p))
+            self.root.after(0, lambda: self._search_complete(final_providers))
             
         except Exception as e:
             error_msg = f"Search failed: {str(e)}"
@@ -242,6 +248,16 @@ class NPPESGeoSearchApp:
         self.search_button.config(state=tk.NORMAL)
         self.progress_label.config(text="Search failed")
         messagebox.showerror("Search Error", error_msg)
+    
+    def _update_provider_list(self, providers: List[Provider]):
+        """Update the provider list (called from main thread).
+        
+        Args:
+            providers: List of Provider objects to display
+        """
+        print(f"DEBUG: Updating provider list with {len(providers)} providers")
+        self.provider_list.set_providers(providers)
+        print(f"DEBUG: Provider list updated, display should show {len(providers)} providers")
     
     def _on_clear_clicked(self):
         """Handle clear button click."""

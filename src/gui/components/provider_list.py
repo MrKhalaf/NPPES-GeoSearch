@@ -102,21 +102,30 @@ class ProviderList:
         for item in self.tree.get_children():
             self.tree.delete(item)
         
+        print(f"DEBUG ProviderList: Total providers: {len(self.providers)}")
+        if self.providers:
+            print(f"DEBUG ProviderList: First provider entity_type: {self.providers[0].entity_type}")
+            print(f"DEBUG ProviderList: Filter physicians: {self.filter_physicians}")
+        
         # Filter providers
         display_providers = self.providers
         if self.filter_physicians:
             display_providers = [p for p in self.providers if p.entity_type == "Individual"]
+            print(f"DEBUG ProviderList: After filtering: {len(display_providers)} providers")
         
         # Add to treeview
         for provider in display_providers:
-            self.tree.insert("", tk.END, values=(
-                provider.npi,
-                provider.name[:50] if provider.name else "",
-                provider.specialty[:30] if provider.specialty else "",
-                provider.taxonomy_code or "",
-                provider.phone or "",
-                provider.zip_code or ""
-            ))
+            try:
+                self.tree.insert("", tk.END, values=(
+                    provider.npi,
+                    provider.name[:50] if provider.name else "",
+                    provider.specialty[:30] if provider.specialty else "",
+                    provider.taxonomy_code or "",
+                    provider.phone or "",
+                    provider.zip_code or ""
+                ))
+            except Exception as e:
+                print(f"DEBUG ProviderList: Error inserting provider {provider.npi}: {e}")
         
         # Update count
         total = len(self.providers)
@@ -125,6 +134,8 @@ class ProviderList:
             self.count_label.config(text=f"{displayed} result{'s' if displayed != 1 else ''}")
         else:
             self.count_label.config(text=f"{displayed} of {total} result{'s' if total != 1 else ''}")
+        
+        print(f"DEBUG ProviderList: Display updated - {displayed} providers shown")
     
     def clear(self):
         """Clear all providers."""
