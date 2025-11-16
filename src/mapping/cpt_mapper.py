@@ -154,4 +154,19 @@ class ProcedureSpecialtyMapper:
             Specialty name or the code itself if not found
         """
         return TAXONOMY_CODES.get(taxonomy_code, taxonomy_code)
+    
+    def get_taxonomy_descriptions(self, taxonomy_codes: List[str]) -> List[str]:
+        """Get taxonomy descriptions for a list of taxonomy codes.
+        
+        Args:
+            taxonomy_codes: List of taxonomy codes
+            
+        Returns:
+            List of taxonomy description names (for API search)
+        """
+        descriptions = []
+        for code in taxonomy_codes:
+            desc = self.get_taxonomy_name(code)
+            descriptions.append(desc)
+        return descriptions
 

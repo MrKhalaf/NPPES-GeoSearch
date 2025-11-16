@@ -10,6 +10,7 @@ from .gui.components.cpt_selector import CPTSelector
 from .gui.components.zip_input import ZIPInput
 from .gui.components.taxonomy_display import TaxonomyDisplay
 from .gui.components.provider_list import ProviderList
+from .gui.components.logs_view import LogsView
 from .nppes.client import NPPESClient
 from .nppes.models import Provider
 from .mapping.cpt_mapper import ProcedureSpecialtyMapper
@@ -68,6 +69,11 @@ class NPPESGeoSearchApp:
         # Provider list
         self.provider_list = ProviderList(self.main_window.results_frame)
         self.provider_list.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        # Logs view
+        self.logs_view = LogsView(self.main_window.logs_frame)
+        self.logs_view.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.main_window.logs_frame.rowconfigure(0, weight=1)
         
         # Initialize services
         self.nppes_client = NPPESClient()
@@ -133,9 +139,13 @@ class NPPESGeoSearchApp:
             # Print initial step
             print_step("Starting search", f"CPT: {cpt_code}, ZIP codes: {len(zip_codes)}")
             
-            # Get taxonomy codes for CPT
+            # Get taxonomy codes for CPT and convert to descriptions
             taxonomy_codes = self.cpt_mapper.map(cpt_code)
+            taxonomy_descriptions = self.cpt_mapper.get_taxonomy_descriptions(taxonomy_codes) if taxonomy_codes else []
             print_step("Mapped taxonomy codes", f"Found {len(taxonomy_codes)} taxonomy code(s)")
+            
+            # Log to GUI
+            self.root.after(0, lambda: self.logs_view.log(f"Starting search: CPT {cpt_code}, {len(zip_codes)} ZIP code(s), {len(taxonomy_descriptions)} taxonomy(ies)"))
             
             # Clear previous results
             self.root.after(0, self.provider_list.clear)
@@ -144,11 +154,15 @@ class NPPESGeoSearchApp:
             seen_npis: Set[str] = set()
             
             total_zips = len(zip_codes)
-            total_taxonomies = len(taxonomy_codes) if taxonomy_codes else 1
+            total_taxonomies = len(taxonomy_descriptions) if taxonomy_descriptions else 1
             total_searches = total_zips * total_taxonomies
             
             # Create progress bar
             progress = ProgressBar(total_searches, desc="Searching providers")
+            
+            # Log callback function
+            def log_callback(message: str):
+                self.root.after(0, lambda m=message: self.logs_view.log(m))
             
             # Search each ZIP code
             for zip_idx, zip_code in enumerate(zip_codes):
@@ -156,17 +170,19 @@ class NPPESGeoSearchApp:
                 progress_text = f"Searching ZIP {zip_idx + 1}/{total_zips}: {zip_code}"
                 self.root.after(0, lambda t=progress_text: self.progress_label.config(text=t))
                 
-                # Search with each taxonomy code
-                for tax_idx, taxonomy_code in enumerate(taxonomy_codes if taxonomy_codes else [None]):
-                    tax_display = taxonomy_code or "all taxonomies"
+                # Search with each taxonomy description
+                search_taxonomies = taxonomy_descriptions if taxonomy_descriptions else [None]
+                for tax_idx, taxonomy_description in enumerate(search_taxonomies):
+                    tax_display = taxonomy_description or "all taxonomies"
                     progress.update(1, f"ZIP {zip_code} ({tax_display})")
                     
                     try:
                         providers = self.nppes_client.search_providers(
                             zip_code=zip_code,
-                            taxonomy_code=taxonomy_code,
+                            taxonomy_description=taxonomy_description,
                             limit=20,
-                            entity_type="1"  # Individuals only
+                            entity_type="1",  # Individuals only
+                            log_callback=log_callback
                         )
                         
                         new_count = 0
@@ -179,10 +195,14 @@ class NPPESGeoSearchApp:
                         
                         if new_count > 0:
                             print(f"  Found {len(providers)} providers ({new_count} new)")
+                            self.root.after(0, lambda z=zip_code, t=tax_display, c=new_count: 
+                                          self.logs_view.log(f"ZIP {z} ({t}): Found {c} new providers", "SUCCESS"))
                         
                     except Exception as e:
                         # Log error but continue searching
-                        print(f"  Error searching {zip_code} with taxonomy {taxonomy_code}: {e}")
+                        error_msg = f"Error searching {zip_code} with taxonomy {taxonomy_description}: {e}"
+                        print(f"  {error_msg}")
+                        self.root.after(0, lambda m=error_msg: self.logs_view.log(m, "ERROR"))
                 
                 # Update results incrementally
                 self.root.after(0, lambda p=all_providers.copy(): self.provider_list.set_providers(p))

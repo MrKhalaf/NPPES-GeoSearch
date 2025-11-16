@@ -1,7 +1,7 @@
 """NPPES API client for searching healthcare providers."""
 
 import httpx
-from typing import List, Optional
+from typing import List, Optional, Callable
 from .models import Provider
 
 
@@ -22,17 +22,19 @@ class NPPESClient:
     def search_providers(
         self,
         zip_code: str,
-        taxonomy_code: Optional[str] = None,
+        taxonomy_description: Optional[str] = None,
         limit: int = 20,
-        entity_type: Optional[str] = None
+        entity_type: Optional[str] = None,
+        log_callback: Optional[Callable[[str], None]] = None
     ) -> List[Provider]:
-        """Search for providers by ZIP code and optional taxonomy code.
+        """Search for providers by ZIP code and optional taxonomy description.
         
         Args:
             zip_code: 5-digit ZIP code
-            taxonomy_code: Optional taxonomy code to filter by
+            taxonomy_description: Optional taxonomy description text to filter by (e.g., "Ophthalmology")
             limit: Maximum number of results per search
             entity_type: Optional entity type filter ("1" for Individual, "2" for Organization)
+            log_callback: Optional callback function to log API calls (receives log message)
             
         Returns:
             List of Provider objects
@@ -43,19 +45,31 @@ class NPPESClient:
             "limit": limit
         }
         
-        if taxonomy_code:
-            # NPPES API accepts taxonomy code directly
-            params["taxonomy_description"] = taxonomy_code
-            # Also try searching by code if description doesn't work
-            # The API may match on taxonomy code in the description field
+        if taxonomy_description:
+            params["taxonomy_description"] = taxonomy_description
         
         if entity_type:
             params["enumeration_type"] = entity_type
+        
+        # Build URL for logging
+        url = f"{self.BASE_URL}?{'&'.join(f'{k}={v}' for k, v in params.items())}"
+        
+        if log_callback:
+            log_callback(f"GET {url}")
         
         try:
             response = self.client.get(self.BASE_URL, params=params)
             response.raise_for_status()
             data = response.json()
+            
+            # Log response
+            if log_callback:
+                result_count = data.get("result_count", 0)
+                if "Errors" in data:
+                    errors = data["Errors"]
+                    log_callback(f"  Response: {result_count} results, Errors: {errors}")
+                else:
+                    log_callback(f"  Response: {result_count} results")
             
             providers = []
             if "results" in data:
@@ -66,7 +80,10 @@ class NPPESClient:
             
             return providers
         except httpx.HTTPError as e:
-            raise Exception(f"Failed to search NPPES API: {e}")
+            error_msg = f"Failed to search NPPES API: {e}"
+            if log_callback:
+                log_callback(f"  ERROR: {error_msg}")
+            raise Exception(error_msg)
     
     def _normalise_entry(self, entry: dict) -> Optional[Provider]:
         """Normalize an NPPES API response entry into a Provider object.

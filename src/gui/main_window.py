@@ -35,9 +35,15 @@ class MainWindow:
         
         # Results section
         self.results_frame = ttk.LabelFrame(self.main_frame, text="Provider Results", padding="10")
-        self.results_frame.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.results_frame.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
         self.results_frame.columnconfigure(0, weight=1)
         self.results_frame.rowconfigure(1, weight=1)
+        
+        # Logs section
+        self.logs_frame = ttk.LabelFrame(self.main_frame, text="API Logs", padding="10")
+        self.logs_frame.grid(row=3, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.logs_frame.columnconfigure(0, weight=1)
+        self.main_frame.rowconfigure(3, weight=0)
         
         # Placeholder for components (will be set by application)
         self.cpt_selector = None
