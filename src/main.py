@@ -138,6 +138,7 @@ class NPPESGeoSearchApp:
         try:
             # Print initial step
             print_step("Starting search", f"CPT: {cpt_code}, ZIP codes: {len(zip_codes)}")
+            print(f"DEBUG: ZIP codes to search: {zip_codes}")
             
             # Get taxonomy codes for CPT and convert to descriptions
             taxonomy_codes = self.cpt_mapper.map(cpt_code)

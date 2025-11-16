@@ -154,7 +154,9 @@ class NPPESClient:
                     primary_address.get("state", ""),
                 ]
                 address = ", ".join([p for p in address_parts if p]).strip()
-                zip_code = primary_address.get("postal_code", "").split("-")[0]  # Get 5-digit ZIP
+                postal_code = primary_address.get("postal_code", "")
+                # Extract first 5 digits of ZIP code
+                zip_code = postal_code[:5] if postal_code else None
                 phone = primary_address.get("telephone_number", "")
             
             return Provider(

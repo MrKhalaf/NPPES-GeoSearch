@@ -129,7 +129,10 @@ class ZIPInput:
         if not zip_code:
             return []
         
-        return get_search_set(zip_code, self.neighbors_data, self.include_neighbors)
+        search_set = get_search_set(zip_code, self.neighbors_data, self.include_neighbors)
+        print(f"DEBUG ZIPInput: ZIP {zip_code}, include_neighbors={self.include_neighbors}, neighbors_data keys={list(self.neighbors_data.keys())[:5]}")
+        print(f"DEBUG ZIPInput: Search set: {search_set}")
+        return search_set
     
     def grid(self, **kwargs):
         """Grid the component frame."""
