@@ -240,13 +240,34 @@ class NPPESGeoSearchApp:
 
 def main():
     """Main entry point."""
+    print("Starting NPPES GeoSearch application...")
+    print("Loading GUI components...")
+    
     root = tk.Tk()
+    
+    # Bring window to front
+    root.lift()
+    root.attributes('-topmost', True)
+    root.after_idle(root.attributes, '-topmost', False)
+    
+    print("Initializing application...")
     app = NPPESGeoSearchApp(root)
+    
+    print("Application ready! GUI window should be visible.")
+    print("Select a CPT code, enter a ZIP code, and click 'Search Providers' to begin.")
     
     try:
         app.run()
+    except KeyboardInterrupt:
+        print("\nApplication interrupted by user.")
+    except Exception as e:
+        print(f"\nERROR: Application crashed: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
+        print("Cleaning up...")
         app.cleanup()
+        print("Application closed.")
 
 
 if __name__ == "__main__":

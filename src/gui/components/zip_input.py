@@ -24,9 +24,13 @@ class ZIPInput:
         # Load neighbors data
         try:
             self.neighbors_data = load_zip_neighbors()
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             # If file not found, use empty dict
-            pass
+            print(f"Warning: ZIP neighbors file not found: {e}")
+            print("  Neighbor search will be limited. Place zip_neighbors_20mi.json in data/ directory.")
+        except Exception as e:
+            print(f"Warning: Error loading ZIP neighbors: {e}")
+            self.neighbors_data = {}
         
         # Create frame
         self.frame = ttk.Frame(parent)
