@@ -19,7 +19,13 @@ pip install -r requirements.txt
 ## Usage
 
 ```bash
-python src/main.py
+python run.py
+```
+
+Or run as a module:
+
+```bash
+python -m src.main
 ```
 
 ## Requirements
