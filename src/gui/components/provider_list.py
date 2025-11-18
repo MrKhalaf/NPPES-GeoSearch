@@ -79,6 +79,31 @@ class ProviderList(QWidget):
         self.filter_physicians = checked
         self._refresh_display()
     
+    def _is_medical_resident(self, provider: Provider) -> bool:
+        """Check if a provider is a medical resident/student.
+        
+        Medical residents are identified by:
+        - Primary taxonomy code starting with "390" (different number)
+        - OR primary taxonomy description containing "student" (case-insensitive)
+        
+        Args:
+            provider: Provider object to check
+            
+        Returns:
+            True if provider is a medical resident, False otherwise
+        """
+        # Check taxonomy code - medical residents use code 390200000X (starts with 390)
+        if provider.taxonomy_code and provider.taxonomy_code.startswith("390"):
+            return True
+        
+        # Check specialty description for student-related terms
+        if provider.specialty:
+            specialty_lower = provider.specialty.lower()
+            if "student" in specialty_lower:
+                return True
+        
+        return False
+    
     def set_providers(self, providers: List[Provider]):
         """Set the providers to display.
         
@@ -104,10 +129,13 @@ class ProviderList(QWidget):
         # Clear existing items
         self.tree.clear()
         
-        # Filter providers
-        display_providers = self.providers
+        # Filter providers - first exclude medical residents from the base set
+        base_providers = [p for p in self.providers if not self._is_medical_resident(p)]
+        
+        # Apply physicians filter
+        display_providers = base_providers
         if self.filter_physicians:
-            display_providers = [p for p in self.providers if p.entity_type == "Individual"]
+            display_providers = [p for p in base_providers if p.entity_type == "Individual"]
         
         # Add to treeview
         for provider in display_providers:
@@ -124,13 +152,12 @@ class ProviderList(QWidget):
             except Exception as e:
                 print(f"Error inserting provider {provider.npi}: {e}")
         
-        # Update count
-        total = len(self.providers)
+        # Update count - show only the displayed count (residents already excluded)
         displayed = len(display_providers)
-        if total == displayed:
-            self.count_label.setText(f"{displayed} result{'s' if displayed != 1 else ''}")
+        if displayed == 0:
+            self.count_label.setText("No results")
         else:
-            self.count_label.setText(f"{displayed} of {total} result{'s' if total != 1 else ''}")
+            self.count_label.setText(f"{displayed} match{'es' if displayed != 1 else ''}")
     
     def clear(self):
         """Clear all providers."""
