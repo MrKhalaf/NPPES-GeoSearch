@@ -31,7 +31,7 @@ class NPPESClient:
         
         Args:
             zip_code: 5-digit ZIP code
-            taxonomy_description: Optional taxonomy description text to filter by (e.g., "Ophthalmology")
+            taxonomy_description: Optional taxonomy description to filter by (e.g., "Orthopedic", "Family Medicine")
             limit: Maximum number of results per search
             entity_type: Optional entity type filter ("1" for Individual, "2" for Organization)
             log_callback: Optional callback function to log API calls (receives log message)
@@ -121,7 +121,7 @@ class NPPESClient:
             if not name:
                 return None
             
-            # Extract taxonomy and specialty
+            # Extract taxonomy and specialty - use primary taxonomy
             taxonomy_code = None
             specialty = None
             taxonomies = entry.get("taxonomies", [])
