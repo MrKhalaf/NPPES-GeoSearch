@@ -1,79 +1,82 @@
-"""Provider results list component."""
+"""Provider results list component using PyQt6."""
 
-import tkinter as tk
-from tkinter import ttk
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTreeWidget, QTreeWidgetItem, QCheckBox, QHeaderView
+from PyQt6.QtCore import Qt
 from typing import List, Optional
 from ...nppes.models import Provider
+from ..theme import MacOSTheme
 
 
-class ProviderList:
+class ProviderList(QWidget):
     """Table/list component for displaying provider search results."""
     
-    def __init__(self, parent, filter_physicians: bool = True):
+    def __init__(self, parent=None, filter_physicians: bool = True):
         """Initialize the provider list.
         
         Args:
             parent: Parent widget
             filter_physicians: If True, filter to show only physicians (Individual entity type)
         """
-        self.parent = parent
+        super().__init__(parent)
         self.filter_physicians = filter_physicians
         self.providers: List[Provider] = []
         
-        # Create frame
-        self.frame = ttk.Frame(parent)
+        # Main layout
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(MacOSTheme.SPACING['md'])
         
-        # Header with count
-        header_frame = ttk.Frame(self.frame)
-        header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 5))
-        header_frame.columnconfigure(1, weight=1)
+        # Header with count and filter
+        header_layout = QHBoxLayout()
         
-        self.count_label = ttk.Label(header_frame, text="No results", font=("TkDefaultFont", 9, "bold"))
-        self.count_label.grid(row=0, column=0, sticky=tk.W)
+        self.count_label = QLabel("No results")
+        self.count_label.setFont(MacOSTheme.get_font('body_bold'))
+        self.count_label.setStyleSheet(f"""
+            color: {MacOSTheme.COLORS['text_primary']};
+            background-color: {MacOSTheme.COLORS['surface']};
+        """)
+        header_layout.addWidget(self.count_label)
         
-        self.filter_var = tk.BooleanVar(value=filter_physicians)
-        self.filter_check = ttk.Checkbutton(
-            header_frame,
-            text="Physicians Only",
-            variable=self.filter_var,
-            command=self._on_filter_toggle
-        )
-        self.filter_check.grid(row=0, column=1, sticky=tk.E)
+        header_layout.addStretch()
         
-        # Treeview for results
-        columns = ("NPI", "Name", "Specialty", "Taxonomy", "Phone", "ZIP")
-        self.tree = ttk.Treeview(self.frame, columns=columns, show="headings", height=15)
+        self.filter_check = QCheckBox("Physicians Only")
+        self.filter_check.setChecked(filter_physicians)
+        self.filter_check.toggled.connect(self._on_filter_toggle)
+        header_layout.addWidget(self.filter_check)
+        
+        layout.addLayout(header_layout)
+        
+        # Tree widget for results
+        columns = ["NPI", "Name", "Specialty", "Taxonomy", "Phone", "ZIP"]
+        self.tree = QTreeWidget()
+        self.tree.setHeaderLabels(columns)
+        self.tree.setAlternatingRowColors(True)
+        self.tree.setRootIsDecorated(False)
+        self.tree.setSelectionBehavior(QTreeWidget.SelectionBehavior.SelectRows)
         
         # Configure columns
-        self.tree.heading("NPI", text="NPI")
-        self.tree.heading("Name", text="Name")
-        self.tree.heading("Specialty", text="Specialty")
-        self.tree.heading("Taxonomy", text="Taxonomy")
-        self.tree.heading("Phone", text="Phone")
-        self.tree.heading("ZIP", text="ZIP")
+        header = self.tree.header()
+        header.setStretchLastSection(False)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
         
-        self.tree.column("NPI", width=100)
-        self.tree.column("Name", width=200)
-        self.tree.column("Specialty", width=150)
-        self.tree.column("Taxonomy", width=120)
-        self.tree.column("Phone", width=120)
-        self.tree.column("ZIP", width=80)
+        # Set minimum column widths
+        self.tree.setColumnWidth(0, 110)
+        self.tree.setColumnWidth(1, 250)
+        self.tree.setColumnWidth(2, 180)
+        self.tree.setColumnWidth(3, 140)
+        self.tree.setColumnWidth(4, 130)
+        self.tree.setColumnWidth(5, 90)
         
-        # Scrollbars
-        v_scrollbar = ttk.Scrollbar(self.frame, orient=tk.VERTICAL, command=self.tree.yview)
-        h_scrollbar = ttk.Scrollbar(self.frame, orient=tk.HORIZONTAL, command=self.tree.xview)
-        self.tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
-        
-        self.tree.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        v_scrollbar.grid(row=1, column=1, sticky=(tk.N, tk.S))
-        h_scrollbar.grid(row=2, column=0, sticky=(tk.W, tk.E))
-        
-        self.frame.columnconfigure(0, weight=1)
-        self.frame.rowconfigure(1, weight=1)
+        layout.addWidget(self.tree)
     
-    def _on_filter_toggle(self):
+    def _on_filter_toggle(self, checked: bool):
         """Handle filter toggle."""
-        self.filter_physicians = self.filter_var.get()
+        self.filter_physicians = checked
         self._refresh_display()
     
     def set_providers(self, providers: List[Provider]):
@@ -99,50 +102,37 @@ class ProviderList:
     def _refresh_display(self):
         """Refresh the treeview display."""
         # Clear existing items
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-        
-        print(f"DEBUG ProviderList: Total providers: {len(self.providers)}")
-        if self.providers:
-            print(f"DEBUG ProviderList: First provider entity_type: {self.providers[0].entity_type}")
-            print(f"DEBUG ProviderList: Filter physicians: {self.filter_physicians}")
+        self.tree.clear()
         
         # Filter providers
         display_providers = self.providers
         if self.filter_physicians:
             display_providers = [p for p in self.providers if p.entity_type == "Individual"]
-            print(f"DEBUG ProviderList: After filtering: {len(display_providers)} providers")
         
         # Add to treeview
         for provider in display_providers:
             try:
-                self.tree.insert("", tk.END, values=(
+                item = QTreeWidgetItem([
                     provider.npi,
                     provider.name[:50] if provider.name else "",
                     provider.specialty[:30] if provider.specialty else "",
                     provider.taxonomy_code or "",
                     provider.phone or "",
                     provider.zip_code or ""
-                ))
+                ])
+                self.tree.addTopLevelItem(item)
             except Exception as e:
-                print(f"DEBUG ProviderList: Error inserting provider {provider.npi}: {e}")
+                print(f"Error inserting provider {provider.npi}: {e}")
         
         # Update count
         total = len(self.providers)
         displayed = len(display_providers)
         if total == displayed:
-            self.count_label.config(text=f"{displayed} result{'s' if displayed != 1 else ''}")
+            self.count_label.setText(f"{displayed} result{'s' if displayed != 1 else ''}")
         else:
-            self.count_label.config(text=f"{displayed} of {total} result{'s' if total != 1 else ''}")
-        
-        print(f"DEBUG ProviderList: Display updated - {displayed} providers shown")
+            self.count_label.setText(f"{displayed} of {total} result{'s' if total != 1 else ''}")
     
     def clear(self):
         """Clear all providers."""
         self.providers = []
         self._refresh_display()
-    
-    def grid(self, **kwargs):
-        """Grid the component frame."""
-        self.frame.grid(**kwargs)
-

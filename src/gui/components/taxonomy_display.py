@@ -1,43 +1,54 @@
-"""Taxonomy code display component."""
+"""Taxonomy code display component using PyQt6."""
 
-import tkinter as tk
-from tkinter import ttk
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
 from typing import List
 from ...mapping.cpt_mapper import ProcedureSpecialtyMapper
+from ..theme import MacOSTheme
 
 
-class TaxonomyDisplay:
+class TaxonomyDisplay(QWidget):
     """Display component for taxonomy codes mapped from CPT."""
     
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         """Initialize the taxonomy display.
         
         Args:
             parent: Parent widget
         """
-        self.parent = parent
+        super().__init__(parent)
         self.mapper = ProcedureSpecialtyMapper()
         
-        # Create frame
-        self.frame = ttk.Frame(parent)
+        # Main layout
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(MacOSTheme.SPACING['sm'])
         
-        self.label = ttk.Label(self.frame, text="Mapped Taxonomy:")
-        self.label.grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
+        # Label
+        self.label = QLabel("Mapped Taxonomy")
+        self.label.setFont(MacOSTheme.get_font('field_label'))
+        self.label.setStyleSheet(f"""
+            color: {MacOSTheme.COLORS['text_primary']};
+            background-color: {MacOSTheme.COLORS['surface']};
+        """)
+        layout.addWidget(self.label)
         
-        self.taxonomy_text = tk.Text(
-            self.frame,
-            height=4,
-            wrap=tk.WORD,
-            state=tk.DISABLED,
-            font=("TkDefaultFont", 9)
-        )
-        self.taxonomy_text.grid(row=1, column=0, sticky=(tk.W, tk.E))
-        
-        scrollbar = ttk.Scrollbar(self.frame, orient=tk.VERTICAL, command=self.taxonomy_text.yview)
-        scrollbar.grid(row=1, column=1, sticky=(tk.N, tk.S))
-        self.taxonomy_text.config(yscrollcommand=scrollbar.set)
-        
-        self.frame.columnconfigure(0, weight=1)
+        # Text widget
+        self.taxonomy_text = QTextEdit()
+        self.taxonomy_text.setReadOnly(True)
+        self.taxonomy_text.setMinimumHeight(100)
+        self.taxonomy_text.setMaximumHeight(150)
+        self.taxonomy_text.setPlaceholderText("Select a CPT code to see mapped taxonomy codes")
+        # Ensure text is visible - use explicit colors
+        self.taxonomy_text.setStyleSheet(f"""
+            QTextEdit {{
+                color: {MacOSTheme.COLORS['text_primary']} !important;
+                background-color: {MacOSTheme.COLORS['input_bg']} !important;
+                border: 1px solid {MacOSTheme.COLORS['input_border']};
+                border-radius: 8px;
+                padding: 10px;
+            }}
+        """)
+        layout.addWidget(self.taxonomy_text)
     
     def update_from_cpt(self, cpt_code: str):
         """Update display based on CPT code.
@@ -45,29 +56,47 @@ class TaxonomyDisplay:
         Args:
             cpt_code: CPT procedure code
         """
+        if not cpt_code:
+            self.taxonomy_text.clear()
+            self.taxonomy_text.setPlaceholderText("Select a CPT code to see mapped taxonomy codes")
+            return
+            
         taxonomy_codes = self.mapper.map(cpt_code)
-        
-        self.taxonomy_text.config(state=tk.NORMAL)
-        self.taxonomy_text.delete(1.0, tk.END)
+        self.taxonomy_text.clear()
         
         if taxonomy_codes:
             lines = []
             for tax_code in taxonomy_codes:
                 specialty_name = self.mapper.get_taxonomy_name(tax_code)
-                lines.append(f"• {specialty_name} ({tax_code})")
-            self.taxonomy_text.insert(1.0, "\n".join(lines))
+                line = f"• {specialty_name} ({tax_code})"
+                lines.append(line)
+            text_content = "\n".join(lines)
+            
+            # Temporarily enable to set text, then disable again
+            self.taxonomy_text.setReadOnly(False)
+            self.taxonomy_text.setPlainText(text_content)
+            self.taxonomy_text.setReadOnly(True)
+            
+            # Force update to ensure text is visible
+            self.taxonomy_text.update()
+            self.taxonomy_text.repaint()
+            
+            # Ensure text color is set
+            self.taxonomy_text.setStyleSheet(f"""
+                QTextEdit {{
+                    color: {MacOSTheme.COLORS['text_primary']};
+                    background-color: {MacOSTheme.COLORS['input_bg']};
+                }}
+            """)
         else:
-            self.taxonomy_text.insert(1.0, "No taxonomy codes found")
-        
-        self.taxonomy_text.config(state=tk.DISABLED)
+            self.taxonomy_text.setPlainText("No taxonomy codes found")
+            self.taxonomy_text.setStyleSheet(f"""
+                QTextEdit {{
+                    color: {MacOSTheme.COLORS['text_secondary']};
+                    background-color: {MacOSTheme.COLORS['input_bg']};
+                }}
+            """)
     
     def clear(self):
         """Clear the display."""
-        self.taxonomy_text.config(state=tk.NORMAL)
-        self.taxonomy_text.delete(1.0, tk.END)
-        self.taxonomy_text.config(state=tk.DISABLED)
-    
-    def grid(self, **kwargs):
-        """Grid the component frame."""
-        self.frame.grid(**kwargs)
-
+        self.taxonomy_text.clear()

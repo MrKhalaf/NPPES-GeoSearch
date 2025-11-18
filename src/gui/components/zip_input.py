@@ -1,80 +1,92 @@
-"""ZIP code input component with neighbors display."""
+"""ZIP code input component with neighbors display using PyQt6."""
 
-import tkinter as tk
-from tkinter import ttk
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QCheckBox
+from PyQt6.QtCore import Qt, pyqtSignal
 from typing import Optional, Callable, List
 from ...geo.zip_neighbors import get_search_set
+from ..theme import MacOSTheme
 
 
-class ZIPInput:
+class ZIPInput(QWidget):
     """ZIP code input with neighbors display."""
     
-    def __init__(self, parent, on_change: Optional[Callable] = None):
+    zip_changed = pyqtSignal(str)
+    
+    def __init__(self, parent=None, on_change: Optional[Callable] = None):
         """Initialize the ZIP input component.
         
         Args:
             parent: Parent widget
             on_change: Optional callback when ZIP code changes
         """
-        self.parent = parent
+        super().__init__(parent)
         self.on_change = on_change
         self.include_neighbors = True
         
-        # Create frame
-        self.frame = ttk.Frame(parent)
+        # Main layout
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(MacOSTheme.SPACING['sm'])
         
-        # ZIP input row
-        input_frame = ttk.Frame(self.frame)
-        input_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 5))
-        input_frame.columnconfigure(1, weight=1)
+        # Input row
+        input_layout = QHBoxLayout()
+        input_layout.setSpacing(MacOSTheme.SPACING['md'])
         
-        self.label = ttk.Label(input_frame, text="ZIP Code:")
-        self.label.grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
+        # Label
+        self.label = QLabel("ZIP Code")
+        self.label.setFont(MacOSTheme.get_font('field_label'))
+        self.label.setStyleSheet(f"""
+            color: {MacOSTheme.COLORS['text_primary']};
+            background-color: {MacOSTheme.COLORS['surface']};
+        """)
+        input_layout.addWidget(self.label)
         
-        self.zip_var = tk.StringVar()
-        self.zip_entry = ttk.Entry(input_frame, textvariable=self.zip_var, width=15)
-        self.zip_entry.grid(row=0, column=1, sticky=tk.W, padx=(0, 10))
-        self.zip_entry.bind("<KeyRelease>", self._on_zip_change)
+        # ZIP input
+        self.zip_entry = QLineEdit()
+        self.zip_entry.setPlaceholderText("Enter 5-digit ZIP code")
+        self.zip_entry.setMaxLength(5)
+        self.zip_entry.setFixedWidth(120)
+        self.zip_entry.textChanged.connect(self._on_zip_change)
+        input_layout.addWidget(self.zip_entry)
         
-        self.neighbors_var = tk.BooleanVar(value=True)
-        self.neighbors_check = ttk.Checkbutton(
-            input_frame,
-            text="Include Neighbors",
-            variable=self.neighbors_var,
-            command=self._on_neighbors_toggle
-        )
-        self.neighbors_check.grid(row=0, column=2, sticky=tk.W)
+        # Neighbors checkbox
+        self.neighbors_check = QCheckBox("Include Neighbors")
+        self.neighbors_check.setChecked(True)
+        self.neighbors_check.toggled.connect(self._on_neighbors_toggle)
+        input_layout.addWidget(self.neighbors_check)
         
-        # Update include_neighbors from checkbox state
-        self.include_neighbors = self.neighbors_var.get()
+        input_layout.addStretch()
+        layout.addLayout(input_layout)
         
         # Neighbors display
-        self.neighbors_label = ttk.Label(
-            self.frame,
-            text="Enter a ZIP code to see neighbors",
-            foreground="gray"
-        )
-        self.neighbors_label.grid(row=1, column=0, sticky=tk.W, pady=(5, 0))
-        
-        self.frame.columnconfigure(0, weight=1)
+        self.neighbors_label = QLabel("Enter a ZIP code to see neighbors")
+        self.neighbors_label.setProperty("class", "caption")
+        self.neighbors_label.setFont(MacOSTheme.get_font('caption'))
+        self.neighbors_label.setStyleSheet(f"""
+            color: {MacOSTheme.COLORS['text_secondary']};
+            background-color: {MacOSTheme.COLORS['surface']};
+        """)
+        layout.addWidget(self.neighbors_label)
     
-    def _on_zip_change(self, event=None):
+    def _on_zip_change(self, text: str):
         """Handle ZIP code input change."""
-        zip_code = self.zip_var.get().strip()
+        zip_code = text.strip()
         self._update_neighbors_display(zip_code)
+        self.zip_changed.emit(zip_code)
         if self.on_change:
             self.on_change(zip_code)
     
-    def _on_neighbors_toggle(self):
+    def _on_neighbors_toggle(self, checked: bool):
         """Handle neighbors checkbox toggle."""
-        self.include_neighbors = self.neighbors_var.get()
-        zip_code = self.zip_var.get().strip()
+        self.include_neighbors = checked
+        zip_code = self.zip_entry.text().strip()
         self._update_neighbors_display(zip_code)
     
     def _update_neighbors_display(self, zip_code: str):
         """Update the neighbors display label."""
         if not zip_code or len(zip_code) < 5:
-            self.neighbors_label.config(text="Enter a ZIP code to see neighbors", foreground="gray")
+            self.neighbors_label.setText("Enter a ZIP code to see neighbors")
+            self.neighbors_label.setStyleSheet(f"color: {MacOSTheme.COLORS['text_secondary']};")
             return
         
         zip_code = zip_code[:5]  # Take first 5 digits
@@ -89,19 +101,20 @@ class ZIPInput:
                 neighbors_str = ", ".join(neighbors[:10])
                 if len(neighbors) > 10:
                     neighbors_str += f", ... (+{len(neighbors) - 10} more)"
-                text = f"Origin: {origin} | Neighbors: {neighbors_str} | Total: {len(search_set)} ZIP codes"
+                text = f"Origin: {origin} • Neighbors: {neighbors_str} • Total: {len(search_set)} ZIP codes"
             else:
                 if self.include_neighbors:
-                    text = f"Origin: {origin} | Searching for neighbors... | Total: 1 ZIP code"
+                    text = f"Origin: {origin} • Searching for neighbors... • Total: 1 ZIP code"
                 else:
-                    text = f"Origin: {origin} | Neighbors disabled | Total: 1 ZIP code"
+                    text = f"Origin: {origin} • Neighbors disabled • Total: 1 ZIP code"
             
-            self.neighbors_label.config(text=text, foreground="black")
+            self.neighbors_label.setText(text)
+            self.neighbors_label.setStyleSheet(f"color: {MacOSTheme.COLORS['text_primary']};")
         except Exception as e:
-            self.neighbors_label.config(
-                text=f"Origin: {zip_code} | Error loading neighbors: {str(e)[:50]}",
-                foreground="orange"
+            self.neighbors_label.setText(
+                f"Origin: {zip_code} • Error loading neighbors: {str(e)[:50]}"
             )
+            self.neighbors_label.setStyleSheet(f"color: {MacOSTheme.COLORS['warning']};")
     
     def get_zip_code(self) -> Optional[str]:
         """Get the entered ZIP code.
@@ -109,7 +122,7 @@ class ZIPInput:
         Returns:
             5-digit ZIP code string or None if invalid
         """
-        zip_code = self.zip_var.get().strip()[:5]
+        zip_code = self.zip_entry.text().strip()[:5]
         if len(zip_code) == 5 and zip_code.isdigit():
             return zip_code
         return None
@@ -125,13 +138,8 @@ class ZIPInput:
             return []
         
         # Ensure checkbox state is synced
-        self.include_neighbors = self.neighbors_var.get()
+        self.include_neighbors = self.neighbors_check.isChecked()
         
         # Limit to 30 neighbors to avoid too many API calls
         search_set = get_search_set(zip_code, self.include_neighbors, radius_miles=20.0, max_neighbors=30)
-        print(f"DEBUG ZIPInput: ZIP {zip_code}, include_neighbors={self.include_neighbors}, found {len(search_set)} ZIP codes")
         return search_set
-    
-    def grid(self, **kwargs):
-        """Grid the component frame."""
-        self.frame.grid(**kwargs)

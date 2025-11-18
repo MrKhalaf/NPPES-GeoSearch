@@ -1,49 +1,99 @@
-"""API logs view component."""
+"""API logs view component using PyQt6."""
 
-import tkinter as tk
-from tkinter import ttk
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton
+from PyQt6.QtGui import QTextCursor
+from PyQt6.QtCore import Qt
 from datetime import datetime
 from typing import Optional
+from ..theme import MacOSTheme
 
 
-class LogsView:
-    """Component for displaying API call logs."""
+class LogsView(QWidget):
+    """Component for displaying API call logs with toggleable visibility."""
     
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         """Initialize the logs view.
         
         Args:
             parent: Parent widget
         """
-        self.parent = parent
+        super().__init__(parent)
+        self.is_expanded = False  # Start collapsed
         
-        # Create frame
-        self.frame = ttk.LabelFrame(parent, text="API Logs", padding="5")
-        
-        # Text widget with scrollbar
-        self.text_widget = tk.Text(
-            self.frame,
-            height=8,
-            wrap=tk.WORD,
-            font=("Courier", 9),
-            bg="#f5f5f5",
-            fg="#333333"
+        # Main layout
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(
+            MacOSTheme.SPACING['xl'],
+            MacOSTheme.SPACING['lg'],
+            MacOSTheme.SPACING['xl'],
+            MacOSTheme.SPACING['lg']
         )
-        self.text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        layout.setSpacing(MacOSTheme.SPACING['md'])
         
-        # Scrollbar
-        scrollbar = ttk.Scrollbar(self.frame, orient=tk.VERTICAL, command=self.text_widget.yview)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.text_widget.config(yscrollcommand=scrollbar.set)
+        # Header with title, toggle button, and clear button
+        header_layout = QHBoxLayout()
         
-        # Clear button
-        clear_button = ttk.Button(
-            self.frame,
-            text="Clear",
-            command=self.clear,
-            width=8
-        )
-        clear_button.pack(side=tk.BOTTOM, pady=(5, 0))
+        # Toggle button - dark blue
+        self.toggle_button = QPushButton("▶ API Logs")
+        self.toggle_button.setFont(MacOSTheme.get_font('heading'))
+        self.toggle_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {MacOSTheme.COLORS['accent']};
+                color: white;
+                border: none;
+                border-radius: {MacOSTheme.RADIUS}px;
+                padding: 8px 16px;
+                font-weight: 600;
+            }}
+            QPushButton:hover {{
+                background-color: {MacOSTheme.COLORS['accent_hover']};
+            }}
+        """)
+        self.toggle_button.clicked.connect(self.toggle)
+        header_layout.addWidget(self.toggle_button)
+        
+        header_layout.addStretch()
+        
+        # Clear button - dark blue
+        clear_button = QPushButton("Clear")
+        clear_button.setFont(MacOSTheme.get_font('body_bold'))
+        clear_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {MacOSTheme.COLORS['accent']};
+                color: white;
+                border: none;
+                border-radius: {MacOSTheme.RADIUS}px;
+                padding: 8px 16px;
+                font-weight: 600;
+            }}
+            QPushButton:hover {{
+                background-color: {MacOSTheme.COLORS['accent_hover']};
+            }}
+        """)
+        clear_button.clicked.connect(self.clear)
+        header_layout.addWidget(clear_button)
+        
+        layout.addLayout(header_layout)
+        
+        # Text widget container (initially hidden)
+        self.text_widget = QTextEdit()
+        self.text_widget.setReadOnly(True)
+        self.text_widget.setFixedHeight(120)
+        self.text_widget.setPlaceholderText("API logs will appear here...")
+        self.text_widget.hide()  # Start hidden
+        
+        layout.addWidget(self.text_widget)
+    
+    def toggle(self):
+        """Toggle the visibility of the logs content."""
+        self.is_expanded = not self.is_expanded
+        
+        if self.is_expanded:
+            self.text_widget.show()
+            self.toggle_button.setText("▼ API Logs")
+        else:
+            self.text_widget.hide()
+            self.toggle_button.setText("▶ API Logs")
     
     def log(self, message: str, level: str = "INFO"):
         """Add a log message.
@@ -52,25 +102,32 @@ class LogsView:
             message: Log message
             level: Log level (INFO, ERROR, etc.)
         """
+        # Auto-expand if collapsed
+        if not self.is_expanded:
+            self.toggle()
+        
         timestamp = datetime.now().strftime("%H:%M:%S")
         log_entry = f"[{timestamp}] {level}: {message}\n"
         
-        self.text_widget.insert(tk.END, log_entry)
-        self.text_widget.see(tk.END)  # Auto-scroll to bottom
-        
-        # Color coding
+        # Determine color based on level
         if level == "ERROR":
-            self.text_widget.tag_add("error", f"end-{len(log_entry)}c", tk.END)
-            self.text_widget.tag_config("error", foreground="red")
+            color = MacOSTheme.COLORS['error']
         elif level == "SUCCESS":
-            self.text_widget.tag_add("success", f"end-{len(log_entry)}c", tk.END)
-            self.text_widget.tag_config("success", foreground="green")
+            color = MacOSTheme.COLORS['success']
+        else:
+            color = MacOSTheme.COLORS['text_primary']
+        
+        # Insert with color - move cursor to end
+        cursor = self.text_widget.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        self.text_widget.setTextCursor(cursor)
+        self.text_widget.setTextColor(MacOSTheme.get_color(color))
+        self.text_widget.insertPlainText(log_entry)
+        
+        # Auto-scroll to bottom
+        scrollbar = self.text_widget.verticalScrollBar()
+        scrollbar.setValue(scrollbar.maximum())
     
     def clear(self):
         """Clear all logs."""
-        self.text_widget.delete(1.0, tk.END)
-    
-    def grid(self, **kwargs):
-        """Grid the component frame."""
-        self.frame.grid(**kwargs)
-
+        self.text_widget.clear()

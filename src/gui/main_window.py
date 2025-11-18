@@ -1,49 +1,135 @@
-"""Main GUI window for NPPES GeoSearch application."""
+"""Main GUI window for NPPES GeoSearch application using PyQt6."""
 
-import tkinter as tk
-from tkinter import ttk
-from typing import Optional
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QFrame
+from PyQt6.QtCore import Qt
+from .theme import MacOSTheme
 
 
-class MainWindow:
-    """Main application window."""
+class MainWindow(QMainWindow):
+    """Main application window with modern macOS design."""
     
-    def __init__(self, root: tk.Tk):
-        """Initialize the main window.
+    def __init__(self):
+        """Initialize the main window."""
+        super().__init__()
+        self.setWindowTitle("NPPES GeoSearch")
+        self.setGeometry(100, 100, 1400, 900)
         
-        Args:
-            root: Tkinter root window
-        """
-        self.root = root
-        self.root.title("NPPES GeoSearch")
-        self.root.geometry("1000x700")
+        # Apply modern theme
+        self.setStyleSheet(MacOSTheme.apply_style_sheet())
         
-        # Create main container
-        self.main_frame = ttk.Frame(root, padding="10")
-        self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        # Central widget
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        central_widget.setStyleSheet(f"background-color: {MacOSTheme.COLORS['background']};")
         
-        # Configure grid weights
-        root.columnconfigure(0, weight=1)
-        root.rowconfigure(0, weight=1)
-        self.main_frame.columnconfigure(0, weight=1)
-        self.main_frame.rowconfigure(2, weight=1)
+        # Main layout with generous padding
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setContentsMargins(
+            MacOSTheme.SPACING['xl'],
+            MacOSTheme.SPACING['xl'],
+            MacOSTheme.SPACING['xl'],
+            MacOSTheme.SPACING['xl']
+        )
+        main_layout.setSpacing(MacOSTheme.SPACING['lg'])
         
-        # Search configuration section
-        self.config_frame = ttk.LabelFrame(self.main_frame, text="Search Configuration", padding="10")
-        self.config_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
-        self.config_frame.columnconfigure(1, weight=1)
+        # Title section
+        title_label = QLabel("NPPES GeoSearch")
+        title_label.setProperty("class", "title")
+        title_label.setFont(MacOSTheme.get_font('title'))
+        title_label.setStyleSheet(f"""
+            color: {MacOSTheme.COLORS['text_primary']};
+            background-color: {MacOSTheme.COLORS['background']};
+        """)
+        main_layout.addWidget(title_label)
         
-        # Results section
-        self.results_frame = ttk.LabelFrame(self.main_frame, text="Provider Results", padding="10")
-        self.results_frame.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
-        self.results_frame.columnconfigure(0, weight=1)
-        self.results_frame.rowconfigure(1, weight=1)
+        subtitle_label = QLabel("Find healthcare providers by location and specialty")
+        subtitle_label.setProperty("class", "caption")
+        subtitle_label.setFont(MacOSTheme.get_font('caption'))
+        subtitle_label.setStyleSheet(f"""
+            color: {MacOSTheme.COLORS['text_secondary']};
+            background-color: {MacOSTheme.COLORS['background']};
+        """)
+        main_layout.addWidget(subtitle_label)
         
-        # Logs section
-        self.logs_frame = ttk.LabelFrame(self.main_frame, text="API Logs", padding="10")
-        self.logs_frame.grid(row=3, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        self.logs_frame.columnconfigure(0, weight=1)
-        self.main_frame.rowconfigure(3, weight=0)
+        main_layout.addSpacing(MacOSTheme.SPACING['xxl'])
+        
+        # Search configuration section - modern card
+        self.config_frame = QFrame()
+        self.config_frame.setProperty("class", "card")
+        self.config_frame.setStyleSheet(f"""
+            QFrame[class="card"] {{
+                background-color: {MacOSTheme.COLORS['surface']};
+                border: 1px solid {MacOSTheme.COLORS['border_light']};
+                border-radius: {MacOSTheme.RADIUS}px;
+            }}
+        """)
+        
+        config_layout = QVBoxLayout(self.config_frame)
+        config_layout.setContentsMargins(
+            MacOSTheme.SPACING['xl'],
+            MacOSTheme.SPACING['xl'],
+            MacOSTheme.SPACING['xl'],
+            MacOSTheme.SPACING['xl']
+        )
+        config_layout.setSpacing(MacOSTheme.SPACING['lg'])
+        
+        config_title = QLabel("Search Configuration")
+        config_title.setFont(MacOSTheme.get_font('heading'))
+        config_title.setStyleSheet(f"""
+            color: {MacOSTheme.COLORS['text_primary']};
+            background-color: {MacOSTheme.COLORS['surface']};
+        """)
+        config_layout.addWidget(config_title)
+        
+        # Store inner layout for component placement
+        self.config_layout = config_layout
+        
+        main_layout.addWidget(self.config_frame)
+        
+        # Results section - modern card
+        self.results_frame = QFrame()
+        self.results_frame.setProperty("class", "card")
+        self.results_frame.setStyleSheet(f"""
+            QFrame[class="card"] {{
+                background-color: {MacOSTheme.COLORS['surface']};
+                border: 1px solid {MacOSTheme.COLORS['border_light']};
+                border-radius: {MacOSTheme.RADIUS}px;
+            }}
+        """)
+        
+        results_layout = QVBoxLayout(self.results_frame)
+        results_layout.setContentsMargins(
+            MacOSTheme.SPACING['xl'],
+            MacOSTheme.SPACING['xl'],
+            MacOSTheme.SPACING['xl'],
+            MacOSTheme.SPACING['xl']
+        )
+        results_layout.setSpacing(MacOSTheme.SPACING['lg'])
+        
+        results_title = QLabel("Provider Results")
+        results_title.setFont(MacOSTheme.get_font('heading'))
+        results_title.setStyleSheet(f"""
+            color: {MacOSTheme.COLORS['text_primary']};
+            background-color: {MacOSTheme.COLORS['surface']};
+        """)
+        results_layout.addWidget(results_title)
+        
+        self.results_layout = results_layout
+        
+        main_layout.addWidget(self.results_frame, stretch=1)
+        
+        # Logs section - modern card
+        self.logs_frame = QFrame()
+        self.logs_frame.setProperty("class", "card")
+        self.logs_frame.setStyleSheet(f"""
+            QFrame[class="card"] {{
+                background-color: {MacOSTheme.COLORS['surface']};
+                border: 1px solid {MacOSTheme.COLORS['border_light']};
+                border-radius: {MacOSTheme.RADIUS}px;
+            }}
+        """)
+        
+        main_layout.addWidget(self.logs_frame)
         
         # Placeholder for components (will be set by application)
         self.cpt_selector = None
@@ -66,4 +152,3 @@ class MainWindow:
     def set_provider_list(self, widget):
         """Set the provider list component."""
         self.provider_list = widget
-
