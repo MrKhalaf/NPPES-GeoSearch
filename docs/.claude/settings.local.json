@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"\nfrom taxonomy_mapping import TAXONOMY_MAPPING, get_taxonomy_specialty, get_all_specialties\n\n# Test a few known codes\ntest_codes = [''207K00000X'', ''207L00000X'', ''207Q00000X'']\nprint(''Testing taxonomy lookups:'')\nfor code in test_codes:\n    entry = TAXONOMY_MAPPING.get(code)\n    if entry:\n        print(f''  {code}: {entry.specialty}'')\n        print(f''    {entry.descriptive_name[:80]}...'')\n    else:\n        print(f''  {code}: NOT FOUND'')\n\nprint()\nprint(f''Sample of {len(get_all_specialties())} specialties:'')\nfor specialty in sorted(get_all_specialties())[:10]:\n    print(f''  - {specialty}'')\n\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

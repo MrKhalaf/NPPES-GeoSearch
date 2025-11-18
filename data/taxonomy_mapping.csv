@@ -1,0 +1,29 @@
+code,descriptive_name,specialty,specialization,provider_grouping
+207K00000X,Allergy & Immunology Physician,Allergy & Immunology,,Allopathic & Osteopathic Physicians
+207KA0200X,Allergy Physician,Allergy & Immunology,Allergy,Allopathic & Osteopathic Physicians
+207KI0005X,Clinical & Laboratory Immunology (Allergy & Immunology) Physician,Allergy & Immunology,Clinical & Laboratory Immunology,Allopathic & Osteopathic Physicians
+207L00000X,Anesthesiology Physician,Anesthesiology,,Allopathic & Osteopathic Physicians
+207LA0401X,Addiction Medicine (Anesthesiology) Physician,Anesthesiology,Addiction Medicine,Allopathic & Osteopathic Physicians
+207LC0200X,Critical Care Medicine (Anesthesiology) Physician,Anesthesiology,Critical Care Medicine,Allopathic & Osteopathic Physicians
+207LH0002X,Hospice and Palliative Medicine (Anesthesiology) Physician,Anesthesiology,Hospice and Palliative Medicine,Allopathic & Osteopathic Physicians
+207LP2900X,Pain Medicine (Anesthesiology) Physician,Anesthesiology,Pain Medicine,Allopathic & Osteopathic Physicians
+207LP3000X,Pediatric Anesthesiology Physician,Anesthesiology,Pediatric Anesthesiology,Allopathic & Osteopathic Physicians
+335E00000X,Prosthetic/Orthotic Supplier,Prosthetic/Orthotic Supplier,,Suppliers
+335V00000X,Portable X-ray and/or Other Portable Diagnostic Imaging Supplier,Portable X-ray and/or Other Portable Diagnostic Imaging Supplier,,Suppliers
+341600000X,Ambulance,Ambulance,,Transportation Services
+3416A0800X,Air Ambulance,Ambulance,Air Transport,Transportation Services
+3416L0300X,Land Ambulance,Ambulance,Land Transport,Transportation Services
+3416S0300X,Water Ambulance,Ambulance,Water Transport,Transportation Services
+341800000X,Military/U.S. Coast Guard Transport,Military/U.S. Coast Guard Transport,,Transportation Services
+3418M1110X,Military or U.S. Coast Guard Ground Transport Ambulance,Military/U.S. Coast Guard Transport,"Military or U.S. Coast Guard Ambulance, Ground Transport",Transportation Services
+3418M1120X,Military or U.S. Coast Guard Air Transport Ambulance,Military/U.S. Coast Guard Transport,"Military or U.S. Coast Guard Ambulance, Air Transport",Transportation Services
+3418M1130X,Military or U.S. Coast Guard Water Transport Ambulance,Military/U.S. Coast Guard Transport,"Military or U.S. Coast Guard Ambulance, Water Transport",Transportation Services
+342000000X,Transportation Network Company,Transportation Network Company,,Transportation Services
+343800000X,Secured Medical Transport (VAN),Secured Medical Transport (VAN),,Transportation Services
+343900000X,Non-emergency Medical Transport (VAN),Non-emergency Medical Transport (VAN),,Transportation Services
+344600000X,Taxi,Taxi,,Transportation Services
+344800000X,Air Carrier,Air Carrier,,Transportation Services
+347B00000X,Bus,Bus,,Transportation Services
+347C00000X,Private Vehicle,Private Vehicle,,Transportation Services
+347D00000X,Train,Train,,Transportation Services
+347E00000X,Transportation Broker,Transportation Broker,,Transportation Services
