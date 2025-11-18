@@ -208,7 +208,10 @@ class CPTSelector(QWidget):
         if cpt_code and cpt_code != self._last_selected_cpt:
             self._last_selected_cpt = cpt_code
             # Make line edit read-only after selection to show selected value
-            self.combo.lineEdit().setReadOnly(True)
+            line_edit = self.combo.lineEdit()
+            line_edit.setReadOnly(True)
+            # Set cursor to beginning to show first characters of the text
+            line_edit.setCursorPosition(0)
             # Emit signal and call callback to update taxonomy display
             self.cpt_changed.emit(cpt_code)
             if self.on_change:
