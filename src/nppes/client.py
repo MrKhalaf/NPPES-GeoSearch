@@ -23,7 +23,7 @@ class NPPESClient:
         self,
         zip_code: str,
         taxonomy_description: Optional[str] = None,
-        limit: int = 20,
+        limit: int = 100,
         entity_type: Optional[str] = None,
         log_callback: Optional[Callable[[str], None]] = None
     ) -> List[Provider]:

@@ -85,7 +85,7 @@ class SearchThread(QThread):
                         providers = self.nppes_client.search_providers(
                             zip_code=zip_code,
                             taxonomy_description=taxonomy_description,  # Use taxonomy_description parameter
-                            limit=20,
+                            limit=100,
                             entity_type="1",  # Individuals only
                             log_callback=lambda m: self.log_message.emit(m, "INFO")
                         )
