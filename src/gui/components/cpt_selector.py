@@ -29,6 +29,7 @@ class CPTSelector(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(MacOSTheme.SPACING['md'])
+        layout.setAlignment(Qt.AlignmentFlag.AlignLeft)  # Left align contents
         
         # Label
         self.label = QLabel("CPT Code")
@@ -42,6 +43,43 @@ class CPTSelector(QWidget):
         # Combobox
         self.combo = QComboBox()
         self.combo.setEditable(True)
+        self.combo.setMaximumWidth(400)  # Limit horizontal space
+        # Style the combobox dropdown items for readability
+        self.combo.setStyleSheet(f"""
+            QComboBox {{
+                background-color: {MacOSTheme.COLORS['input_bg']};
+                border: 1px solid {MacOSTheme.COLORS['input_border']};
+                border-radius: 8px;
+                padding: 10px 14px;
+                font-size: 14px;
+                color: {MacOSTheme.COLORS['text_primary']};
+            }}
+            QComboBox:hover {{
+                border: 1px solid {MacOSTheme.COLORS['accent']};
+            }}
+            QComboBox:focus {{
+                border: 2px solid {MacOSTheme.COLORS['accent']};
+                padding: 9px 13px;
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {MacOSTheme.COLORS['surface']};
+                border: 1px solid {MacOSTheme.COLORS['border']};
+                border-radius: 8px;
+                selection-background-color: {MacOSTheme.COLORS['accent_light']};
+                selection-color: {MacOSTheme.COLORS['text_primary']};
+                color: {MacOSTheme.COLORS['text_primary']};
+                padding: 4px;
+            }}
+            QComboBox QAbstractItemView::item {{
+                color: {MacOSTheme.COLORS['text_primary']};
+                padding: 6px;
+                min-height: 20px;
+            }}
+            QComboBox QAbstractItemView::item:selected {{
+                background-color: {MacOSTheme.COLORS['accent_light']};
+                color: {MacOSTheme.COLORS['text_primary']};
+            }}
+        """)
         line_edit = self.combo.lineEdit()
         line_edit.setPlaceholderText("Select or search for a CPT code...")
         line_edit.setReadOnly(False)
@@ -62,17 +100,8 @@ class CPTSelector(QWidget):
         # Connect text editing finished to handle when user completes typing
         line_edit.editingFinished.connect(self._on_editing_finished)
         
-        layout.addWidget(self.combo, stretch=1)
-        
-        # Selected value display
-        self.value_label = QLabel("")
-        self.value_label.setProperty("class", "caption")
-        self.value_label.setFont(MacOSTheme.get_font('caption'))
-        self.value_label.setStyleSheet(f"""
-            color: {MacOSTheme.COLORS['text_secondary']};
-            background-color: {MacOSTheme.COLORS['surface']};
-        """)
-        layout.addWidget(self.value_label)
+        layout.addWidget(self.combo)
+        layout.addStretch()  # Push everything to the left
     
     def _filter_items(self, text: str):
         """Filter combobox items based on search text."""
@@ -178,8 +207,6 @@ class CPTSelector(QWidget):
         
         if cpt_code and cpt_code != self._last_selected_cpt:
             self._last_selected_cpt = cpt_code
-            self.value_label.setText(f"✓ {cpt_code}")
-            self.value_label.setStyleSheet(f"color: {MacOSTheme.COLORS['success']};")
             # Make line edit read-only after selection to show selected value
             self.combo.lineEdit().setReadOnly(True)
             # Emit signal and call callback to update taxonomy display

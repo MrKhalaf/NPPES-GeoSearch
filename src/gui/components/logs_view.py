@@ -102,10 +102,6 @@ class LogsView(QWidget):
             message: Log message
             level: Log level (INFO, ERROR, etc.)
         """
-        # Auto-expand if collapsed
-        if not self.is_expanded:
-            self.toggle()
-        
         timestamp = datetime.now().strftime("%H:%M:%S")
         log_entry = f"[{timestamp}] {level}: {message}\n"
         
