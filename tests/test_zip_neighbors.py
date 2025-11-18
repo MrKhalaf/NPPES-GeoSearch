@@ -79,10 +79,11 @@ class TestZIPNeighborFinder(unittest.TestCase):
         
         self.mock_search.by_coordinates.return_value = mock_results
         
-        neighbors = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
+        neighbors, radius = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
         
         # Should return all 5 neighbors (within 20 miles)
         self.assertEqual(len(neighbors), 5)
+        self.assertEqual(radius, 20.0)
         self.mock_search.by_coordinates.assert_called_once()
         call_args = self.mock_search.by_coordinates.call_args
         self.assertEqual(call_args[1]['radius'], 20.0)
@@ -96,12 +97,13 @@ class TestZIPNeighborFinder(unittest.TestCase):
         # First call returns many, second call returns few
         self.mock_search.by_coordinates.side_effect = [many_results_20, few_results_10]
         
-        neighbors = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
+        neighbors, radius = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
         
         # Should have called twice (20 miles, then 10 miles)
         self.assertEqual(self.mock_search.by_coordinates.call_count, 2)
         # Should return 25 neighbors (within 10 miles)
         self.assertEqual(len(neighbors), 25)
+        self.assertEqual(radius, 10.0)
         # Verify second call was with 10 mile radius
         second_call = self.mock_search.by_coordinates.call_args_list[1]
         self.assertEqual(second_call[1]['radius'], 10.0)
@@ -114,11 +116,12 @@ class TestZIPNeighborFinder(unittest.TestCase):
         
         self.mock_search.by_coordinates.side_effect = [many_results, many_results, few_results_5]
         
-        neighbors = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
+        neighbors, radius = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
         
         # Should have called 3 times (20, 10, 5)
         self.assertEqual(self.mock_search.by_coordinates.call_count, 3)
         self.assertEqual(len(neighbors), 20)
+        self.assertEqual(radius, 5.0)
         # Verify third call was with 5 mile radius
         third_call = self.mock_search.by_coordinates.call_args_list[2]
         self.assertEqual(third_call[1]['radius'], 5.0)
@@ -131,11 +134,12 @@ class TestZIPNeighborFinder(unittest.TestCase):
         
         self.mock_search.by_coordinates.side_effect = [many_results, many_results, many_results, few_results_2]
         
-        neighbors = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
+        neighbors, radius = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
         
         # Should have called 4 times (20, 10, 5, 2)
         self.assertEqual(self.mock_search.by_coordinates.call_count, 4)
         self.assertEqual(len(neighbors), 15)
+        self.assertEqual(radius, 2.0)
         # Verify fourth call was with 2 mile radius
         fourth_call = self.mock_search.by_coordinates.call_args_list[3]
         self.assertEqual(fourth_call[1]['radius'], 2.0)
@@ -145,10 +149,11 @@ class TestZIPNeighborFinder(unittest.TestCase):
         exact_results = [Mock(zipcode=f'2204{i:02d}', lat=38.86, lng=-77.15) for i in range(30)]
         self.mock_search.by_coordinates.return_value = exact_results
         
-        neighbors = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
+        neighbors, radius = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
         
         # Should return all 30, only call once
         self.assertEqual(len(neighbors), 30)
+        self.assertEqual(radius, 20.0)
         self.mock_search.by_coordinates.assert_called_once()
     
     def test_find_neighbors_no_results(self):
@@ -156,9 +161,10 @@ class TestZIPNeighborFinder(unittest.TestCase):
         # Return empty list or list with only origin
         self.mock_search.by_coordinates.return_value = []
         
-        neighbors = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
+        neighbors, radius = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
         
         self.assertEqual(len(neighbors), 0)
+        self.assertEqual(radius, 20.0)
     
     def test_find_neighbors_excludes_origin(self):
         """Test that origin ZIP code is excluded from results."""
@@ -169,11 +175,12 @@ class TestZIPNeighborFinder(unittest.TestCase):
         ]
         self.mock_search.by_coordinates.return_value = mock_results
         
-        neighbors = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
+        neighbors, radius = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
         
         # Should exclude origin
         self.assertNotIn('22044', neighbors)
         self.assertEqual(len(neighbors), 2)
+        self.assertEqual(radius, 20.0)
     
     def test_find_neighbors_all_within_radius(self):
         """Test that all returned neighbors are within the final radius."""
@@ -189,10 +196,11 @@ class TestZIPNeighborFinder(unittest.TestCase):
             mock_results_5,  # 2 at 5 miles
         ]
         
-        neighbors = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
+        neighbors, radius = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
         
         # Should return 2 neighbors, all within 5 miles
         self.assertEqual(len(neighbors), 2)
+        self.assertEqual(radius, 5.0)
         self.assertIn('22041', neighbors)
         self.assertIn('22046', neighbors)
 
@@ -204,12 +212,13 @@ class TestZIPNeighborsModule(unittest.TestCase):
     def test_get_neighbors(self, mock_get_finder):
         """Test get_neighbors function."""
         mock_finder = Mock()
-        mock_finder.find_neighbors.return_value = ['22041', '22046', '22205']
+        mock_finder.find_neighbors.return_value = (['22041', '22046', '22205'], 20.0)
         mock_get_finder.return_value = mock_finder
         
-        neighbors = get_neighbors('22044', radius_miles=20.0, max_results=30)
+        neighbors, radius = get_neighbors('22044', radius_miles=20.0, max_results=30)
         
         self.assertEqual(neighbors, ['22041', '22046', '22205'])
+        self.assertEqual(radius, 20.0)
         mock_finder.find_neighbors.assert_called_once_with('22044', radius_miles=20.0, max_results=30)
     
     @patch('src.geo.zip_neighbors._get_neighbor_finder')
@@ -217,13 +226,14 @@ class TestZIPNeighborsModule(unittest.TestCase):
         """Test get_neighbors when finder is not available."""
         mock_get_finder.return_value = None
         
-        neighbors = get_neighbors('22044', radius_miles=20.0, max_results=30)
+        neighbors, radius = get_neighbors('22044', radius_miles=20.0, max_results=30)
         
         self.assertEqual(neighbors, [])
+        self.assertEqual(radius, 20.0)
     
     def test_iter_zip_search_set_with_neighbors(self):
         """Test iterating ZIP search set with neighbors."""
-        with patch('src.geo.zip_neighbors.get_neighbors', return_value=['22041', '22046']):
+        with patch('src.geo.zip_neighbors.get_neighbors', return_value=(['22041', '22046'], 20.0)):
             search_set = list(iter_zip_search_set('22044', include_neighbors=True, max_neighbors=30))
             
             self.assertEqual(search_set[0], '22044')  # Origin first
@@ -239,11 +249,12 @@ class TestZIPNeighborsModule(unittest.TestCase):
     
     def test_get_search_set(self):
         """Test get_search_set function."""
-        with patch('src.geo.zip_neighbors.get_neighbors', return_value=['22041', '22046']):
-            search_set = get_search_set('22044', include_neighbors=True, max_neighbors=30)
+        with patch('src.geo.zip_neighbors.get_neighbors', return_value=(['22041', '22046'], 20.0)):
+            search_set, radius = get_search_set('22044', include_neighbors=True, max_neighbors=30)
             
             self.assertEqual(search_set[0], '22044')  # Origin first
             self.assertEqual(len(search_set), 3)
+            self.assertEqual(radius, 20.0)
 
 
 class TestEdgeCases(unittest.TestCase):
@@ -269,9 +280,10 @@ class TestEdgeCases(unittest.TestCase):
         results_29 = [Mock(zipcode=f'2204{i:02d}', lat=38.86, lng=-77.15) for i in range(29)]
         self.mock_search.by_coordinates.return_value = results_29
         
-        neighbors = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
+        neighbors, radius = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
         
         self.assertEqual(len(neighbors), 29)
+        self.assertEqual(radius, 20.0)
         self.mock_search.by_coordinates.assert_called_once()
     
     def test_max_results_boundary_30(self):
@@ -279,9 +291,10 @@ class TestEdgeCases(unittest.TestCase):
         results_30 = [Mock(zipcode=f'2204{i:02d}', lat=38.86, lng=-77.15) for i in range(30)]
         self.mock_search.by_coordinates.return_value = results_30
         
-        neighbors = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
+        neighbors, radius = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
         
         self.assertEqual(len(neighbors), 30)
+        self.assertEqual(radius, 20.0)
     
     def test_max_results_boundary_31(self):
         """Test with 31 neighbors (just over limit, should reduce radius)."""
@@ -290,11 +303,12 @@ class TestEdgeCases(unittest.TestCase):
         
         self.mock_search.by_coordinates.side_effect = [many_results, few_results]
         
-        neighbors = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
+        neighbors, radius = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=30)
         
         # Should reduce radius and return 25
         self.assertEqual(len(neighbors), 25)
         self.assertEqual(self.mock_search.by_coordinates.call_count, 2)
+        self.assertEqual(radius, 10.0)
     
     def test_custom_max_results(self):
         """Test with custom max_results value."""
@@ -303,10 +317,11 @@ class TestEdgeCases(unittest.TestCase):
         
         self.mock_search.by_coordinates.side_effect = [many_results, few_results]
         
-        neighbors = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=10)
+        neighbors, radius = self.finder.find_neighbors('22044', radius_miles=20.0, max_results=10)
         
         self.assertEqual(len(neighbors), 10)
         self.assertEqual(self.mock_search.by_coordinates.call_count, 2)
+        self.assertEqual(radius, 10.0)
     
     def test_custom_starting_radius(self):
         """Test with custom starting radius."""
@@ -315,11 +330,12 @@ class TestEdgeCases(unittest.TestCase):
         
         self.mock_search.by_coordinates.side_effect = [many_results, few_results]
         
-        neighbors = self.finder.find_neighbors('22044', radius_miles=15.0, max_results=30)
+        neighbors, radius = self.finder.find_neighbors('22044', radius_miles=15.0, max_results=30)
         
         # Should start at 15, then try 10
         first_call = self.mock_search.by_coordinates.call_args_list[0]
         self.assertEqual(first_call[1]['radius'], 15.0)
+        self.assertEqual(radius, 10.0)
 
 
 if __name__ == '__main__':
