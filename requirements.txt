@@ -15,3 +15,12 @@ python-dotenv>=1.0.0
 
 # GUI Framework
 PyQt6>=6.6.0
+
+# Documentation/Build tools (for taxonomy mapping generation)
+# Added 2025-11-17: Required for docs/build_taxonomy_mapping.py
+# - PyPDF2: PDF text extraction from NUCC taxonomy PDF
+# - pycryptodome: Required for decrypting AES-encrypted PDFs
+# - tqdm: Progress bars during PDF processing
+PyPDF2>=3.0.0
+pycryptodome>=3.20.0
+tqdm>=4.65.0
