@@ -1,6 +1,6 @@
 """Main GUI window for NPPES GeoSearch application using PyQt6."""
 
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QFrame
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QFrame, QPushButton, QHBoxLayout
 from PyQt6.QtCore import Qt
 from .theme import MacOSTheme
 
@@ -53,7 +53,7 @@ class MainWindow(QMainWindow):
         
         main_layout.addSpacing(MacOSTheme.SPACING['xxl'])
         
-        # Search configuration section - modern card
+        # Search configuration section - modern card (white background)
         self.config_frame = QFrame()
         self.config_frame.setProperty("class", "card")
         self.config_frame.setStyleSheet(f"""
@@ -73,16 +73,45 @@ class MainWindow(QMainWindow):
         )
         config_layout.setSpacing(MacOSTheme.SPACING['lg'])
         
-        config_title = QLabel("Search Configuration")
-        config_title.setFont(MacOSTheme.get_font('heading'))
-        config_title.setStyleSheet(f"""
-            color: {MacOSTheme.COLORS['text_primary']};
-            background-color: {MacOSTheme.COLORS['surface']};
+        # Header with title and toggle button
+        header_layout = QHBoxLayout()
+        
+        # Toggle button - dark blue
+        self.config_toggle_button = QPushButton("▼ Search Configuration")
+        self.config_toggle_button.setFont(MacOSTheme.get_font('heading'))
+        self.config_toggle_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {MacOSTheme.COLORS['accent']};
+                color: white;
+                border: none;
+                border-radius: {MacOSTheme.RADIUS}px;
+                padding: 8px 16px;
+                font-weight: 600;
+            }}
+            QPushButton:hover {{
+                background-color: {MacOSTheme.COLORS['accent_hover']};
+            }}
         """)
-        config_layout.addWidget(config_title)
+        self.config_toggle_button.clicked.connect(self._toggle_config)
+        header_layout.addWidget(self.config_toggle_button)
+        header_layout.addStretch()
+        
+        config_layout.addLayout(header_layout)
+        
+        # Content container for collapsible content
+        self.config_content_widget = QWidget()
+        self.config_content_widget.setStyleSheet(f"background-color: {MacOSTheme.COLORS['surface']};")
+        self.config_content_layout = QVBoxLayout(self.config_content_widget)
+        self.config_content_layout.setContentsMargins(0, 0, 0, 0)
+        self.config_content_layout.setSpacing(MacOSTheme.SPACING['lg'])
         
         # Store inner layout for component placement
-        self.config_layout = config_layout
+        self.config_layout = self.config_content_layout
+        
+        config_layout.addWidget(self.config_content_widget)
+        
+        # Track expansion state
+        self.config_expanded = True
         
         main_layout.addWidget(self.config_frame)
         
@@ -118,12 +147,12 @@ class MainWindow(QMainWindow):
         
         main_layout.addWidget(self.results_frame, stretch=1)
         
-        # Logs section - modern card
+        # Logs section - modern card (grey background)
         self.logs_frame = QFrame()
         self.logs_frame.setProperty("class", "card")
         self.logs_frame.setStyleSheet(f"""
             QFrame[class="card"] {{
-                background-color: {MacOSTheme.COLORS['surface']};
+                background-color: {MacOSTheme.COLORS['background']};
                 border: 1px solid {MacOSTheme.COLORS['border_light']};
                 border-radius: {MacOSTheme.RADIUS}px;
             }}
@@ -136,6 +165,27 @@ class MainWindow(QMainWindow):
         self.zip_input = None
         self.taxonomy_display = None
         self.provider_list = None
+    
+    def _toggle_config(self):
+        """Toggle the visibility of the config content."""
+        self.config_expanded = not self.config_expanded
+        
+        if self.config_expanded:
+            self.config_content_widget.show()
+            self.config_toggle_button.setText("▼ Search Configuration")
+        else:
+            self.config_content_widget.hide()
+            self.config_toggle_button.setText("▶ Search Configuration")
+    
+    def collapse_config(self):
+        """Collapse the config section."""
+        if self.config_expanded:
+            self._toggle_config()
+    
+    def expand_config(self):
+        """Expand the config section."""
+        if not self.config_expanded:
+            self._toggle_config()
     
     def set_cpt_selector(self, widget):
         """Set the CPT selector component."""

@@ -86,35 +86,41 @@ class ZIPInput(QWidget):
         """Update the neighbors display label."""
         if not zip_code or len(zip_code) < 5:
             self.neighbors_label.setText("Enter a ZIP code to see neighbors")
-            self.neighbors_label.setStyleSheet(f"color: {MacOSTheme.COLORS['text_secondary']};")
+            self.neighbors_label.setStyleSheet(f"""
+                color: {MacOSTheme.COLORS['text_secondary']};
+                background-color: {MacOSTheme.COLORS['surface']};
+            """)
             return
         
         zip_code = zip_code[:5]  # Take first 5 digits
         
         try:
             # Limit to 30 neighbors to avoid too many API calls
-            search_set = get_search_set(zip_code, self.include_neighbors, radius_miles=20.0, max_neighbors=30)
-            origin = search_set[0] if search_set else zip_code
+            search_set, actual_radius = get_search_set(zip_code, self.include_neighbors, radius_miles=20.0, max_neighbors=30)
             neighbors = search_set[1:] if len(search_set) > 1 else []
             
-            if neighbors:
-                neighbors_str = ", ".join(neighbors[:10])
-                if len(neighbors) > 10:
-                    neighbors_str += f", ... (+{len(neighbors) - 10} more)"
-                text = f"Origin: {origin} • Neighbors: {neighbors_str} • Total: {len(search_set)} ZIP codes"
+            if self.include_neighbors and neighbors:
+                # Format: "Including X neighboring zip codes within Y miles"
+                radius_str = f"{actual_radius:.0f}" if actual_radius == int(actual_radius) else f"{actual_radius:.1f}"
+                text = f"Including {len(neighbors)} neighboring zip code{'s' if len(neighbors) != 1 else ''} within {radius_str} mile{'s' if actual_radius != 1.0 else ''}"
+            elif self.include_neighbors:
+                text = f"Searching for neighbors..."
             else:
-                if self.include_neighbors:
-                    text = f"Origin: {origin} • Searching for neighbors... • Total: 1 ZIP code"
-                else:
-                    text = f"Origin: {origin} • Neighbors disabled • Total: 1 ZIP code"
+                text = f"Neighbors disabled"
             
             self.neighbors_label.setText(text)
-            self.neighbors_label.setStyleSheet(f"color: {MacOSTheme.COLORS['text_primary']};")
+            self.neighbors_label.setStyleSheet(f"""
+                color: {MacOSTheme.COLORS['text_primary']};
+                background-color: {MacOSTheme.COLORS['surface']};
+            """)
         except Exception as e:
             self.neighbors_label.setText(
-                f"Origin: {zip_code} • Error loading neighbors: {str(e)[:50]}"
+                f"Error loading neighbors: {str(e)[:50]}"
             )
-            self.neighbors_label.setStyleSheet(f"color: {MacOSTheme.COLORS['warning']};")
+            self.neighbors_label.setStyleSheet(f"""
+                color: {MacOSTheme.COLORS['warning']};
+                background-color: {MacOSTheme.COLORS['surface']};
+            """)
     
     def get_zip_code(self) -> Optional[str]:
         """Get the entered ZIP code.
@@ -141,5 +147,5 @@ class ZIPInput(QWidget):
         self.include_neighbors = self.neighbors_check.isChecked()
         
         # Limit to 30 neighbors to avoid too many API calls
-        search_set = get_search_set(zip_code, self.include_neighbors, radius_miles=20.0, max_neighbors=30)
+        search_set, _ = get_search_set(zip_code, self.include_neighbors, radius_miles=20.0, max_neighbors=30)
         return search_set

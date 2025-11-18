@@ -20,6 +20,9 @@ class LogsView(QWidget):
         super().__init__(parent)
         self.is_expanded = False  # Start collapsed
         
+        # Set grey background to match logs_frame
+        self.setStyleSheet(f"background-color: {MacOSTheme.COLORS['background']};")
+        
         # Main layout
         layout = QVBoxLayout(self)
         layout.setContentsMargins(

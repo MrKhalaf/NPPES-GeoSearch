@@ -138,7 +138,7 @@ class NPPESGeoSearchApp:
     """Main application class."""
     
     def __init__(self):
-        """Initialize the application."""
+        """Initialize the application.""" 
         self.app = QApplication(sys.argv)
         
         # Set application style
@@ -279,6 +279,9 @@ class NPPESGeoSearchApp:
             QMessageBox.warning(self.main_window, "Invalid ZIP Code", "Please enter a valid 5-digit ZIP code.")
             return
         
+        # Collapse config section immediately to give more space to results
+        self.main_window.collapse_config()
+        
         # Start search in background thread
         self.is_searching = True
         self.search_button.setEnabled(False)
@@ -328,6 +331,9 @@ class NPPESGeoSearchApp:
         self.search_button.setEnabled(True)
         self.progress_label.setText(f"Search complete. Found {len(providers)} providers.")
         
+        # Collapse the config section to give more space to results
+        self.main_window.collapse_config()
+        
         if not providers:
             QMessageBox.information(self.main_window, "No Results", "No providers found matching the search criteria.")
     
@@ -354,6 +360,8 @@ class NPPESGeoSearchApp:
         """Handle clear button click."""
         self.provider_list.clear()
         self.progress_label.setText("")
+        # Expand config section so user can reconfigure search
+        self.main_window.expand_config()
     
     def run(self):
         """Run the application."""
