@@ -2,6 +2,11 @@
 
 > A powerful Python GUI application for discovering healthcare providers using geographic proximity and medical specialty matching. Search the National Plan and Provider Enumeration System (NPPES) database by ZIP code and CPT procedure codes to find physicians who match your specific needs.
 
+## Demo
+
+![NPPES GeoSearch Demo](docs/demo.gif)
+
+Watch a walkthrough of NPPES GeoSearch in action, demonstrating CPT code selection, ZIP code neighbor discovery, and real-time provider search.
 
 ## NPPES GeoSearch
 
@@ -42,11 +47,6 @@ Built with PyQt6, featuring:
 - **Background processing** - Non-blocking searches keep the UI responsive
 - **Comprehensive provider details** - NPI, name, specialty, taxonomy code, phone, and address
 - **Smart deduplication** - Prevents duplicate providers across multiple searches
-
-## Demo
-
-<!-- Video demo will be added here -->
-**Video Demo Coming Soon** - Watch a walkthrough of NPPES GeoSearch in action!
 
 ## Quick Start
 
