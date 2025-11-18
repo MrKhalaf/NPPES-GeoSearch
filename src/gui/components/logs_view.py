@@ -57,24 +57,29 @@ class LogsView(QWidget):
         
         header_layout.addStretch()
         
-        # Clear button - dark blue
-        clear_button = QPushButton("Clear")
-        clear_button.setFont(MacOSTheme.get_font('body_bold'))
-        clear_button.setStyleSheet(f"""
+        # Clear button - de-emphasized style, stored as instance variable
+        self.clear_button = QPushButton("Clear")
+        self.clear_button.setFont(MacOSTheme.get_font('body'))
+        self.clear_button.setStyleSheet(f"""
             QPushButton {{
-                background-color: {MacOSTheme.COLORS['accent']};
-                color: white;
-                border: none;
+                background-color: {MacOSTheme.COLORS['surface']};
+                color: {MacOSTheme.COLORS['text_secondary']};
+                border: 1px solid {MacOSTheme.COLORS['border_light']};
                 border-radius: {MacOSTheme.RADIUS}px;
                 padding: 8px 16px;
-                font-weight: 600;
+                font-weight: 500;
             }}
             QPushButton:hover {{
-                background-color: {MacOSTheme.COLORS['accent_hover']};
+                background-color: {MacOSTheme.COLORS['hover']};
+                color: {MacOSTheme.COLORS['text_primary']};
+            }}
+            QPushButton:pressed {{
+                background-color: {MacOSTheme.COLORS['border_light']};
             }}
         """)
-        clear_button.clicked.connect(self.clear)
-        header_layout.addWidget(clear_button)
+        self.clear_button.clicked.connect(self.clear)
+        self.clear_button.hide()  # Hide initially since section starts collapsed
+        header_layout.addWidget(self.clear_button)
         
         layout.addLayout(header_layout)
         
@@ -93,9 +98,11 @@ class LogsView(QWidget):
         
         if self.is_expanded:
             self.text_widget.show()
+            self.clear_button.show()
             self.toggle_button.setText("▼ API Logs")
         else:
             self.text_widget.hide()
+            self.clear_button.hide()
             self.toggle_button.setText("▶ API Logs")
     
     def log(self, message: str, level: str = "INFO"):

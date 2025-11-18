@@ -189,24 +189,25 @@ class NPPESGeoSearchApp:
         self.search_button.clicked.connect(self._on_search_clicked)
         button_layout.addWidget(self.search_button)
         
-        # Clear button - also dark blue
+        # Clear button - de-emphasized style
         self.clear_button = QPushButton("Clear Results")
-        self.clear_button.setFont(MacOSTheme.get_font('body_bold'))
+        self.clear_button.setFont(MacOSTheme.get_font('body'))
         self.clear_button.setStyleSheet(f"""
             QPushButton {{
-                background-color: {MacOSTheme.COLORS['accent']};
-                color: white;
-                border: none;
+                background-color: {MacOSTheme.COLORS['surface']};
+                color: {MacOSTheme.COLORS['text_secondary']};
+                border: 1px solid {MacOSTheme.COLORS['border_light']};
                 border-radius: {MacOSTheme.RADIUS}px;
                 padding: 12px 24px;
-                font-weight: 600;
+                font-weight: 500;
                 font-size: 14px;
             }}
             QPushButton:hover {{
-                background-color: {MacOSTheme.COLORS['accent_hover']};
+                background-color: {MacOSTheme.COLORS['hover']};
+                color: {MacOSTheme.COLORS['text_primary']};
             }}
             QPushButton:pressed {{
-                background-color: {MacOSTheme.COLORS['accent_hover']};
+                background-color: {MacOSTheme.COLORS['border_light']};
             }}
         """)
         self.clear_button.clicked.connect(self._on_clear_clicked)
