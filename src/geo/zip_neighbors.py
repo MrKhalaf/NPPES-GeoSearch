@@ -1,6 +1,6 @@
 """ZIP code neighbor utilities using uszipcode library."""
 
-from typing import List, Iterator, Optional
+from typing import List, Iterator, Optional, Tuple
 from .zip_neighbor_finder import ZIPNeighborFinder
 
 
@@ -25,7 +25,7 @@ def _get_neighbor_finder() -> Optional[ZIPNeighborFinder]:
     return _neighbor_finder
 
 
-def get_neighbors(zip_code: str, radius_miles: float = 20.0, max_results: int = 30) -> List[str]:
+def get_neighbors(zip_code: str, radius_miles: float = 20.0, max_results: int = 30) -> Tuple[List[str], float]:
     """Get neighbor ZIP codes within radius using uszipcode.
     
     Args:
@@ -34,20 +34,20 @@ def get_neighbors(zip_code: str, radius_miles: float = 20.0, max_results: int = 
         max_results: Maximum number of neighbors to return (default: 30)
         
     Returns:
-        List of neighbor ZIP codes (limited to max_results)
+        Tuple of (list of neighbor ZIP codes, actual radius used in miles)
     """
     zip_str = str(zip_code).strip()
     
     finder = _get_neighbor_finder()
     if not finder:
-        return []
+        return ([], radius_miles)
     
     try:
-        neighbors = finder.find_neighbors(zip_str, radius_miles=radius_miles, max_results=max_results)
-        return neighbors
+        neighbors, actual_radius = finder.find_neighbors(zip_str, radius_miles=radius_miles, max_results=max_results)
+        return (neighbors, actual_radius)
     except Exception as e:
         print(f"Error finding neighbors for ZIP {zip_str}: {e}")
-        return []
+        return ([], radius_miles)
 
 
 def iter_zip_search_set(zip_code: str, include_neighbors: bool = True, radius_miles: float = 20.0, max_neighbors: int = 30) -> Iterator[str]:
@@ -69,12 +69,12 @@ def iter_zip_search_set(zip_code: str, include_neighbors: bool = True, radius_mi
     
     # Then yield neighbors if requested
     if include_neighbors:
-        neighbors = get_neighbors(zip_str, radius_miles=radius_miles, max_results=max_neighbors)
+        neighbors, _ = get_neighbors(zip_str, radius_miles=radius_miles, max_results=max_neighbors)
         for neighbor in neighbors:
             yield neighbor
 
 
-def get_search_set(zip_code: str, include_neighbors: bool = True, radius_miles: float = 20.0, max_neighbors: int = 30) -> List[str]:
+def get_search_set(zip_code: str, include_neighbors: bool = True, radius_miles: float = 20.0, max_neighbors: int = 30) -> Tuple[List[str], float]:
     """Get the full list of ZIP codes to search.
     
     Args:
@@ -84,6 +84,13 @@ def get_search_set(zip_code: str, include_neighbors: bool = True, radius_miles: 
         max_neighbors: Maximum number of neighbors to include (default: 30)
         
     Returns:
-        List of ZIP codes in search order
+        Tuple of (list of ZIP codes in search order, actual radius used in miles)
     """
-    return list(iter_zip_search_set(zip_code, include_neighbors, radius_miles, max_neighbors))
+    zip_str = str(zip_code).strip()
+    
+    if include_neighbors:
+        neighbors, actual_radius = get_neighbors(zip_str, radius_miles=radius_miles, max_results=max_neighbors)
+        search_set = [zip_str] + neighbors
+        return (search_set, actual_radius)
+    else:
+        return ([zip_str], radius_miles)

@@ -1,6 +1,6 @@
 """ZIP code neighbor finder using coordinates and distance calculation."""
 
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import math
 
 
@@ -69,7 +69,7 @@ class ZIPNeighborFinder:
         
         return None
     
-    def find_neighbors(self, zip_code: str, radius_miles: float = 20.0, max_results: int = 30) -> List[str]:
+    def find_neighbors(self, zip_code: str, radius_miles: float = 20.0, max_results: int = 30) -> Tuple[List[str], float]:
         """Find neighboring ZIP codes within radius, reducing radius if too many found.
         
         Args:
@@ -78,14 +78,14 @@ class ZIPNeighborFinder:
             max_results: Maximum number of neighbors to return (default: 30)
             
         Returns:
-            List of neighboring ZIP codes (within adjusted radius to get <= max_results)
+            Tuple of (list of neighboring ZIP codes, actual radius used in miles)
         """
         if not self.use_library:
-            return []
+            return ([], radius_miles)
         
         origin_coords = self.get_zip_coordinates(zip_code)
         if not origin_coords:
-            return []
+            return ([], radius_miles)
         
         origin_lat, origin_lon = origin_coords
         
@@ -122,7 +122,7 @@ class ZIPNeighborFinder:
                     if len(neighbors) <= max_results:
                         if current_radius < radius_miles:
                             print(f"Reduced radius to {current_radius} miles to get {len(neighbors)} neighbors (target: {max_results})")
-                        return neighbors
+                        return (neighbors, current_radius)
                     # Otherwise, continue to next smaller radius
                         
             except Exception as e:
@@ -146,7 +146,7 @@ class ZIPNeighborFinder:
                             neighbors.append(result.zipcode)
                             if len(neighbors) >= max_results:
                                 break
-            return neighbors
+            return (neighbors, 2.0)
         
-        return []
+        return ([], radius_miles)
 
