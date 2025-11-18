@@ -1,7 +1,7 @@
 """CPT code selector dropdown component using PyQt6."""
 
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QComboBox
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtGui import QFocusEvent, QKeyEvent
 from typing import Optional, Callable
 from ...mapping.cpt_mapper import ProcedureSpecialtyMapper
@@ -25,6 +25,12 @@ class CPTSelector(QWidget):
         self.mapper = ProcedureSpecialtyMapper()
         self.cpt_codes = self.mapper.get_all_cpt_codes()
         self._last_selected_cpt = None  # Track last selected CPT to avoid duplicate updates
+        
+        # Debounce timer for search - wait 0.5 seconds after typing stops
+        self._search_timer = QTimer(self)
+        self._search_timer.setSingleShot(True)
+        self._search_timer.timeout.connect(self._execute_filter)
+        self._pending_search_text = ""  # Store text to filter when timer fires
         
         # Main layout
         layout = QHBoxLayout(self)
@@ -99,8 +105,9 @@ class CPTSelector(QWidget):
         # Store reference to line edit for signal management
         self.line_edit = line_edit
         
-        # Enable search filtering - connect before other signals
-        line_edit.textChanged.connect(self._filter_items)
+        # Enable search filtering with debouncing - connect before other signals
+        # Use a debounced handler that waits 0.5 seconds after typing stops
+        line_edit.textChanged.connect(self._on_text_changed)
         # Use activated signal (fires when user selects from dropdown)
         self.combo.activated.connect(self._on_selection_change)
         # Also connect currentIndexChanged for programmatic changes
@@ -137,17 +144,14 @@ class CPTSelector(QWidget):
                 return False
             
             if event.type() == event.Type.KeyPress:
-                # Show popup immediately on first keystroke (if not already visible)
-                if not self.combo.view().isVisible():
-                    # Ensure all items are loaded before showing popup
-                    if self.combo.count() == 0:
-                        # Repopulate with all items if empty
-                        self.combo.blockSignals(True)
-                        for item_text, code in self.all_items:
-                            self.combo.addItem(item_text, code)
-                        self.combo.blockSignals(False)
-                    if self.combo.count() > 0:
-                        self.combo.showPopup()
+                # Don't automatically show popup on keypress - it interrupts typing
+                # Just ensure all items are available for filtering if combobox is empty
+                if self.combo.count() == 0:
+                    # Repopulate with all items if empty (shouldn't happen, but safety check)
+                    self.combo.blockSignals(True)
+                    for item_text, code in self.all_items:
+                        self.combo.addItem(item_text, code)
+                    self.combo.blockSignals(False)
                 # Ensure currentIndex is -1 so Qt doesn't auto-match text to items
                 # This must be done after the key press updates the text
                 from PyQt6.QtCore import QTimer
@@ -155,6 +159,20 @@ class CPTSelector(QWidget):
                 # Don't return False - let the key press go through to update text
         
         return super().eventFilter(obj, event)
+    
+    def _on_text_changed(self, text: str):
+        """Handle text change with debouncing - wait 0.5 seconds after typing stops."""
+        # Store the current text to filter
+        self._pending_search_text = text
+        
+        # Reset the timer - this will cancel any pending filter and start a new 0.5s countdown
+        self._search_timer.stop()
+        self._search_timer.start(500)  # 500ms = 0.5 seconds
+    
+    def _execute_filter(self):
+        """Execute the actual filtering after debounce delay."""
+        # Use the stored text that was pending
+        self._filter_items(self._pending_search_text)
     
     def _filter_items(self, text: str):
         """Filter combobox items based on search text (substring search)."""
@@ -187,7 +205,7 @@ class CPTSelector(QWidget):
                     return
         
         # Temporarily disconnect textChanged to prevent recursion during filtering
-        self.line_edit.textChanged.disconnect(self._filter_items)
+        self.line_edit.textChanged.disconnect(self._on_text_changed)
         
         # Clear and repopulate with filtered items
         self.combo.blockSignals(True)
@@ -222,17 +240,22 @@ class CPTSelector(QWidget):
         line_edit.setCursorPosition(len(user_text))
         
         # Reconnect the signal AFTER setting text to avoid triggering filter again
-        self.line_edit.textChanged.connect(self._filter_items)
+        self.line_edit.textChanged.connect(self._on_text_changed)
         
         self.combo.blockSignals(False)
         
-        # Show popup only when user has typed something AND there are matching items
-        # Don't show popup if text is empty (user cleared it)
+        # Show popup when user types, but only if there are matching items
+        # Keep popup visible as user continues typing so they can see filtered results
         if user_text and self.combo.count() > 0:
-            # Show popup when there are filtered results
-            self.combo.showPopup()
-        else:
-            # Hide popup if no text or no matches
+            # Show popup if not already visible, or keep it visible if it is
+            # Use QTimer to show it after the current event processing to avoid interrupting typing
+            from PyQt6.QtCore import QTimer
+            if not self.combo.view().isVisible():
+                # Show popup after a tiny delay to avoid interrupting the current keystroke
+                QTimer.singleShot(10, lambda: self.combo.showPopup() if self.combo.count() > 0 else None)
+            # If popup is already visible, it will stay visible and show updated filtered items
+        elif not user_text:
+            # Hide popup when text is cleared
             self.combo.hidePopup()
     
     def _on_editing_finished(self):
