@@ -2,6 +2,7 @@
 
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QComboBox
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QFocusEvent, QKeyEvent
 from typing import Optional, Callable
 from ...mapping.cpt_mapper import ProcedureSpecialtyMapper
 from ..theme import MacOSTheme
@@ -44,6 +45,10 @@ class CPTSelector(QWidget):
         self.combo = QComboBox()
         self.combo.setEditable(True)
         self.combo.setMaximumWidth(400)  # Limit horizontal space
+        # Disable built-in completer to prevent interference with custom filtering
+        self.combo.setCompleter(None)
+        # Set insert policy to prevent Qt from auto-inserting/matching items
+        self.combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         # Style the combobox dropdown items for readability
         self.combo.setStyleSheet(f"""
             QComboBox {{
@@ -91,6 +96,9 @@ class CPTSelector(QWidget):
         # Store all items for filtering
         self.all_items = [(f"{code} - {desc}", code) for code, desc in self.cpt_codes.items()]
         
+        # Store reference to line edit for signal management
+        self.line_edit = line_edit
+        
         # Enable search filtering - connect before other signals
         line_edit.textChanged.connect(self._filter_items)
         # Use activated signal (fires when user selects from dropdown)
@@ -100,8 +108,53 @@ class CPTSelector(QWidget):
         # Connect text editing finished to handle when user completes typing
         line_edit.editingFinished.connect(self._on_editing_finished)
         
+        # Install event filter on line edit to catch key presses and focus events
+        line_edit.installEventFilter(self)
+        
         layout.addWidget(self.combo)
         layout.addStretch()  # Push everything to the left
+    
+    def eventFilter(self, obj, event):
+        """Event filter to handle focus and key press events."""
+        # Handle focus events on line edit (when user clicks directly on the text field)
+        if obj == self.combo.lineEdit():
+            if event.type() == event.Type.FocusIn:
+                # Select all text when line edit receives focus so user can immediately type
+                # Use QTimer to do this after the focus event completes
+                from PyQt6.QtCore import QTimer
+                QTimer.singleShot(0, lambda: self.combo.lineEdit().selectAll())
+                
+                # Ensure all items are available for filtering
+                # Only repopulate if combobox is empty
+                if self.combo.count() == 0:
+                    self.combo.blockSignals(True)
+                    for item_text, code in self.all_items:
+                        self.combo.addItem(item_text, code)
+                    self.combo.blockSignals(False)
+                
+                # Don't force show popup - let user click dropdown arrow if they want
+                # The filtering will show popup automatically when they type
+                return False
+            
+            if event.type() == event.Type.KeyPress:
+                # Show popup immediately on first keystroke (if not already visible)
+                if not self.combo.view().isVisible():
+                    # Ensure all items are loaded before showing popup
+                    if self.combo.count() == 0:
+                        # Repopulate with all items if empty
+                        self.combo.blockSignals(True)
+                        for item_text, code in self.all_items:
+                            self.combo.addItem(item_text, code)
+                        self.combo.blockSignals(False)
+                    if self.combo.count() > 0:
+                        self.combo.showPopup()
+                # Ensure currentIndex is -1 so Qt doesn't auto-match text to items
+                # This must be done after the key press updates the text
+                from PyQt6.QtCore import QTimer
+                QTimer.singleShot(0, lambda: self.combo.setCurrentIndex(-1) if self.combo.currentIndex() >= 0 else None)
+                # Don't return False - let the key press go through to update text
+        
+        return super().eventFilter(obj, event)
     
     def _filter_items(self, text: str):
         """Filter combobox items based on search text (substring search)."""
@@ -109,10 +162,14 @@ class CPTSelector(QWidget):
         line_edit = self.combo.lineEdit()
         line_edit.setReadOnly(False)
         
+        # Use the text parameter (the new text from textChanged signal)
+        # This is the text the user just typed, which is what we want to filter on
+        user_text = text.strip() if text else ""
+        
         # If text contains " - " and matches a complete item exactly, user selected it
-        if " - " in text:
+        if " - " in user_text:
             for item_text, code in self.all_items:
-                if text == item_text:
+                if user_text == item_text:
                     # User selected this item, trigger selection change
                     self.combo.blockSignals(True)
                     # Find the item in the current combobox and set it
@@ -129,30 +186,53 @@ class CPTSelector(QWidget):
                     self._on_selection_change(self.combo.currentIndex())
                     return
         
+        # Temporarily disconnect textChanged to prevent recursion during filtering
+        self.line_edit.textChanged.disconnect(self._filter_items)
+        
         # Clear and repopulate with filtered items
         self.combo.blockSignals(True)
         self.combo.clear()
         
-        if not text:
+        # Now filter based on user's text
+        if not user_text:
             # Show all items when search is empty
             for item_text, code in self.all_items:
                 self.combo.addItem(item_text, code)
         else:
             # Filter items using case-insensitive substring search
             # Search in both the CPT code and description
-            text_lower = text.lower().strip()
+            text_lower = user_text.lower()
+            matched_count = 0
             for item_text, code in self.all_items:
-                # Check if search text appears in the full item text (code or description)
-                if text_lower in item_text.lower():
+                # Check if search text appears ANYWHERE in the full item text (code or description)
+                # This is a true substring search - not prefix-only
+                item_lower = item_text.lower()
+                if text_lower in item_lower:
                     self.combo.addItem(item_text, code)
+                    matched_count += 1
+        
+        # Set current index to -1 FIRST to prevent Qt from matching text to items
+        # This must be done before setting the text
+        self.combo.setCurrentIndex(-1)
+        
+        # Restore the exact text the user typed (clear() cleared it)
+        line_edit.setText(user_text)
+        
+        # Move cursor to end so user can continue typing
+        line_edit.setCursorPosition(len(user_text))
+        
+        # Reconnect the signal AFTER setting text to avoid triggering filter again
+        self.line_edit.textChanged.connect(self._filter_items)
         
         self.combo.blockSignals(False)
         
-        # Show popup if there are items and user is typing
-        if self.combo.count() > 0 and text:
+        # Show popup only when user has typed something AND there are matching items
+        # Don't show popup if text is empty (user cleared it)
+        if user_text and self.combo.count() > 0:
+            # Show popup when there are filtered results
             self.combo.showPopup()
-        elif not text:
-            # Hide popup when search is cleared
+        else:
+            # Hide popup if no text or no matches
             self.combo.hidePopup()
     
     def _on_editing_finished(self):
