@@ -110,6 +110,84 @@ CMS_PROCEDURES = {
     "90460": "Immunization administration through 18 years of age via any route of administration, with counseling by physician or other qualified health care professional; first or only component of each vaccine or toxoid administered",
     "29515": "Strapping; ankle and/or foot",
     "29200": "Strapping; chest",
+    
+    # Neurology
+    "95812": "Electroencephalogram (EEG) extended monitoring; 41-60 minutes",
+    "95813": "Electroencephalogram (EEG) extended monitoring; 61-119 minutes",
+    "95816": "Electroencephalogram (EEG); including recording awake and drowsy",
+    "95819": "Electroencephalogram (EEG); including recording awake and asleep",
+    "95822": "Electroencephalogram (EEG); recording in coma or sleep only",
+    "95824": "Electroencephalogram (EEG); cerebral death evaluation only",
+    "95954": "Computerized electroencephalogram (EEG) monitoring and video analysis",
+    "95957": "Digital analysis of electroencephalogram (EEG); for epileptic spike analysis",
+    "95970": "Electronic analysis of implanted neurostimulator pulse generator system",
+    "95972": "Electronic analysis of implanted neurostimulator pulse generator system; complex",
+    "95983": "Electronic analysis of implanted neurostimulator pulse generator system; with brain",
+    "95992": "Cerebral blood flow study",
+    "95993": "Cerebral blood flow study; with pharmacological intervention",
+    
+    # ENT/Otolaryngology
+    "31231": "Nasal endoscopy, diagnostic, unilateral or bilateral (separate procedure)",
+    "31233": "Nasal endoscopy, diagnostic, unilateral or bilateral (separate procedure); with removal of foreign body",
+    "31235": "Nasal endoscopy, diagnostic, unilateral or bilateral (separate procedure); with removal of polyps",
+    "31237": "Nasal endoscopy, surgical; with removal of foreign body",
+    "31238": "Nasal endoscopy, surgical; with removal of polyps",
+    "31240": "Nasal endoscopy, surgical; with removal of tumor(s), polyps, or other lesion(s)",
+    "31254": "Nasal endoscopy, surgical; with removal of tissue from nasal cavity and/or paranasal sinuses",
+    "31255": "Nasal endoscopy, surgical; with removal of tissue from nasal cavity and/or paranasal sinuses; with removal of polyps",
+    "31256": "Nasal endoscopy, surgical; with removal of tissue from nasal cavity and/or paranasal sinuses; with removal of polyps, extensive",
+    "92511": "Nasopharyngoscopy with endoscope (separate procedure)",
+    "92512": "Nasopharyngoscopy with endoscope (separate procedure); with removal of foreign body",
+    "92520": "Laryngoscopy, flexible fiberoptic; diagnostic",
+    "92521": "Laryngoscopy, flexible fiberoptic; with removal of foreign body",
+    "92522": "Laryngoscopy, flexible fiberoptic; with removal of polyps",
+    "92523": "Laryngoscopy, flexible fiberoptic; with removal of tumor(s), polyps, or other lesion(s)",
+    
+    # Physical Medicine & Rehabilitation
+    "97110": "Therapeutic procedure, 1 or more areas, each 15 minutes; therapeutic exercises to develop strength and endurance, range of motion and flexibility",
+    "97112": "Therapeutic procedure, 1 or more areas, each 15 minutes; neuromuscular reeducation of movement, balance, coordination, kinesthetic sense, posture, and/or proprioception for sitting and/or standing activities",
+    "97113": "Therapeutic procedure, 1 or more areas, each 15 minutes; aquatic therapy with therapeutic exercises",
+    "97116": "Therapeutic procedure, 1 or more areas, each 15 minutes; gait training (includes stair climbing)",
+    "97124": "Therapeutic procedure, 1 or more areas, each 15 minutes; massage, including effleurage, petrissage and/or tapotement (stroking, compression, percussion)",
+    "97140": "Manual therapy techniques (eg, mobilization/manipulation, manual lymphatic drainage, manual traction), 1 or more regions, each 15 minutes",
+    "97161": "Physical therapy evaluation: low complexity",
+    "97162": "Physical therapy evaluation: moderate complexity",
+    "97163": "Physical therapy evaluation: high complexity",
+    "97164": "Re-evaluation of physical therapy established plan of care",
+    "97165": "Occupational therapy evaluation, low complexity",
+    "97166": "Occupational therapy evaluation, moderate complexity",
+    "97167": "Occupational therapy evaluation, high complexity",
+    "97168": "Re-evaluation of occupational therapy established plan of care",
+    
+    # More Cardiology
+    "93010": "Electrocardiogram, routine ECG with at least 12 leads; interpretation and report only",
+    "93015": "Cardiovascular stress test using maximal or submaximal treadmill or bicycle exercise, continuous electrocardiographic monitoring, and/or pharmacological stress; with physician supervision, with interpretation and report",
+    "93017": "Cardiovascular stress test using maximal or submaximal treadmill or bicycle exercise, continuous electrocardiographic monitoring, and/or pharmacological stress; tracing only, without interpretation and report",
+    "93306": "Echocardiogram, transthoracic, real-time with image documentation (2D), includes M-mode recording, when performed, complete, with spectral Doppler echocardiography, and with color flow Doppler echocardiography",
+    "93307": "Echocardiogram, transthoracic, real-time with image documentation (2D), includes M-mode recording, when performed, complete, with spectral Doppler echocardiography, and with color flow Doppler echocardiography; with stress testing",
+    
+    # More Radiology
+    "70450": "Computed tomography, head or brain; without contrast material",
+    "70460": "Computed tomography, head or brain; with contrast material(s)",
+    "70470": "Computed tomography, head or brain; without contrast material, followed by contrast material(s) and further sections",
+    "72141": "Magnetic resonance (eg, proton) imaging, spinal canal and contents, cervical; without contrast material",
+    "72142": "Magnetic resonance (eg, proton) imaging, spinal canal and contents, cervical; with contrast material(s)",
+    "72146": "Magnetic resonance (eg, proton) imaging, spinal canal and contents, lumbar; without contrast material",
+    "72147": "Magnetic resonance (eg, proton) imaging, spinal canal and contents, lumbar; with contrast material(s)",
+    "72148": "Magnetic resonance (eg, proton) imaging, spinal canal and contents, lumbar; without contrast material, followed by contrast material(s) and further sequences",
+    "72156": "Magnetic resonance (eg, proton) imaging, spinal canal and contents, thoracic; without contrast material",
+    "72157": "Magnetic resonance (eg, proton) imaging, spinal canal and contents, thoracic; with contrast material(s)",
+    
+    # More Urology
+    "52005": "Cystourethroscopy, with ureteral catheterization, with or without irrigation, instillation, or ureteropyelography, exclusive of radiologic service",
+    "52204": "Cystourethroscopy, with biopsy(s)",
+    "52214": "Cystourethroscopy, with fulguration (including cryosurgery or laser surgery) of trigone, bladder neck, prostatic fossa, urethra, or periurethral glands",
+    "52224": "Cystourethroscopy, with fulguration (including cryosurgery or laser surgery) of trigone, bladder neck, prostatic fossa, urethra, or periurethral glands; with removal of foreign body",
+    "52234": "Cystourethroscopy, with fulguration (including cryosurgery or laser surgery) of trigone, bladder neck, prostatic fossa, urethra, or periurethral glands; with removal of polyps",
+    "52240": "Cystourethroscopy, with fulguration (including cryosurgery or laser surgery) of trigone, bladder neck, prostatic fossa, urethra, or periurethral glands; with removal of tumor(s), polyps, or other lesion(s)",
+    "52250": "Cystourethroscopy, with insertion of indwelling ureteral stent (eg, Gibbons or double-J type)",
+    "52260": "Cystourethroscopy, with removal of foreign body",
+    "52265": "Cystourethroscopy, with removal of ureteral calculus",
 }
 
 
@@ -259,6 +337,84 @@ PROCEDURE_CODE_RULES: Dict[str, List[str]] = {
     # Other procedures - general practice
     "29515": ["207Q00000X", "207R00000X", "208D00000X"],  # Strapping ankle/foot
     "29200": ["207Q00000X", "207R00000X", "208D00000X"],  # Strapping chest
+    
+    # Neurology
+    "95812": ["204F00000X"],  # EEG extended monitoring
+    "95813": ["204F00000X"],  # EEG extended monitoring
+    "95816": ["204F00000X"],  # EEG awake and drowsy
+    "95819": ["204F00000X"],  # EEG awake and asleep
+    "95822": ["204F00000X"],  # EEG coma/sleep
+    "95824": ["204F00000X"],  # EEG cerebral death
+    "95954": ["204F00000X"],  # Computerized EEG monitoring
+    "95957": ["204F00000X"],  # Digital EEG analysis
+    "95970": ["204F00000X"],  # Neurostimulator analysis
+    "95972": ["204F00000X"],  # Neurostimulator analysis complex
+    "95983": ["204F00000X"],  # Neurostimulator analysis with brain
+    "95992": ["204F00000X"],  # Cerebral blood flow study
+    "95993": ["204F00000X"],  # Cerebral blood flow study with pharmacological intervention
+    
+    # ENT/Otolaryngology
+    "31231": ["207Y00000X"],  # Nasal endoscopy diagnostic
+    "31233": ["207Y00000X"],  # Nasal endoscopy with foreign body removal
+    "31235": ["207Y00000X"],  # Nasal endoscopy with polyp removal
+    "31237": ["207Y00000X"],  # Nasal endoscopy surgical with foreign body
+    "31238": ["207Y00000X"],  # Nasal endoscopy surgical with polyps
+    "31240": ["207Y00000X"],  # Nasal endoscopy surgical with tumor removal
+    "31254": ["207Y00000X"],  # Nasal endoscopy surgical with tissue removal
+    "31255": ["207Y00000X"],  # Nasal endoscopy surgical with polyps
+    "31256": ["207Y00000X"],  # Nasal endoscopy surgical extensive
+    "92511": ["207Y00000X"],  # Nasopharyngoscopy
+    "92512": ["207Y00000X"],  # Nasopharyngoscopy with foreign body
+    "92520": ["207Y00000X"],  # Laryngoscopy diagnostic
+    "92521": ["207Y00000X"],  # Laryngoscopy with foreign body
+    "92522": ["207Y00000X"],  # Laryngoscopy with polyps
+    "92523": ["207Y00000X"],  # Laryngoscopy with tumor removal
+    
+    # Physical Medicine & Rehabilitation
+    "97110": ["208100000X"],  # Therapeutic exercises
+    "97112": ["208100000X"],  # Neuromuscular reeducation
+    "97113": ["208100000X"],  # Aquatic therapy
+    "97116": ["208100000X"],  # Gait training
+    "97124": ["208100000X"],  # Massage therapy
+    "97140": ["208100000X"],  # Manual therapy
+    "97161": ["208100000X"],  # PT evaluation low complexity
+    "97162": ["208100000X"],  # PT evaluation moderate complexity
+    "97163": ["208100000X"],  # PT evaluation high complexity
+    "97164": ["208100000X"],  # PT re-evaluation
+    "97165": ["208100000X"],  # OT evaluation low complexity
+    "97166": ["208100000X"],  # OT evaluation moderate complexity
+    "97167": ["208100000X"],  # OT evaluation high complexity
+    "97168": ["208100000X"],  # OT re-evaluation
+    
+    # More Cardiology
+    "93010": ["207RC0000X"],  # ECG interpretation only
+    "93015": ["207RC0000X"],  # Cardiovascular stress test
+    "93017": ["207RC0000X"],  # Cardiovascular stress test tracing only
+    "93306": ["207RC0000X"],  # Echocardiogram complete
+    "93307": ["207RC0000X"],  # Echocardiogram with stress testing
+    
+    # More Radiology
+    "70450": ["2085R0202X"],  # CT head without contrast
+    "70460": ["2085R0202X"],  # CT head with contrast
+    "70470": ["2085R0202X"],  # CT head without then with contrast
+    "72141": ["2085R0202X"],  # MRI cervical spine without contrast
+    "72142": ["2085R0202X"],  # MRI cervical spine with contrast
+    "72146": ["2085R0202X"],  # MRI lumbar spine without contrast
+    "72147": ["2085R0202X"],  # MRI lumbar spine with contrast
+    "72148": ["2085R0202X"],  # MRI lumbar spine without then with contrast
+    "72156": ["2085R0202X"],  # MRI thoracic spine without contrast
+    "72157": ["2085R0202X"],  # MRI thoracic spine with contrast
+    
+    # More Urology
+    "52005": ["208800000X"],  # Cystourethroscopy with ureteral catheterization
+    "52204": ["208800000X"],  # Cystourethroscopy with biopsy
+    "52214": ["208800000X"],  # Cystourethroscopy with fulguration
+    "52224": ["208800000X"],  # Cystourethroscopy with fulguration and foreign body
+    "52234": ["208800000X"],  # Cystourethroscopy with fulguration and polyps
+    "52240": ["208800000X"],  # Cystourethroscopy with fulguration and tumor removal
+    "52250": ["208800000X"],  # Cystourethroscopy with stent insertion
+    "52260": ["208800000X"],  # Cystourethroscopy with foreign body removal
+    "52265": ["208800000X"],  # Cystourethroscopy with ureteral calculus removal
 }
 
 # Keyword-based rules for fallback
@@ -288,6 +444,22 @@ KEYWORD_RULES: Dict[str, List[str]] = {
     "ct": ["2085R0202X"],
     "mri": ["2085R0202X"],
     "radiology": ["2085R0202X"],
+    "neurology": ["204F00000X"],
+    "eeg": ["204F00000X"],
+    "electroencephalogram": ["204F00000X"],
+    "neurostimulator": ["204F00000X"],
+    "cerebral": ["204F00000X"],
+    "ent": ["207Y00000X"],
+    "otolaryngology": ["207Y00000X"],
+    "nasal": ["207Y00000X"],
+    "laryngoscopy": ["207Y00000X"],
+    "nasopharyngoscopy": ["207Y00000X"],
+    "physical therapy": ["208100000X"],
+    "occupational therapy": ["208100000X"],
+    "rehabilitation": ["208100000X"],
+    "therapeutic": ["208100000X"],
+    "gait": ["208100000X"],
+    "massage": ["208100000X"],
 }
 
 # Default fallback taxonomy codes
