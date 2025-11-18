@@ -91,7 +91,7 @@ class CPTSelector(QWidget):
         # Store all items for filtering
         self.all_items = [(f"{code} - {desc}", code) for code, desc in self.cpt_codes.items()]
         
-        # Enable search filtering
+        # Enable search filtering - connect before other signals
         line_edit.textChanged.connect(self._filter_items)
         # Use activated signal (fires when user selects from dropdown)
         self.combo.activated.connect(self._on_selection_change)
@@ -104,10 +104,13 @@ class CPTSelector(QWidget):
         layout.addStretch()  # Push everything to the left
     
     def _filter_items(self, text: str):
-        """Filter combobox items based on search text."""
-        # Don't filter if user is typing a selection (contains " - ")
+        """Filter combobox items based on search text (substring search)."""
+        # Ensure line edit is editable for searching
+        line_edit = self.combo.lineEdit()
+        line_edit.setReadOnly(False)
+        
+        # If text contains " - " and matches a complete item exactly, user selected it
         if " - " in text:
-            # Check if this is a complete selection - if so, trigger selection change
             for item_text, code in self.all_items:
                 if text == item_text:
                     # User selected this item, trigger selection change
@@ -125,27 +128,21 @@ class CPTSelector(QWidget):
                     # Trigger selection change manually
                     self._on_selection_change(self.combo.currentIndex())
                     return
-            return
-        
-        # Don't filter if text matches a complete item (user selected from dropdown)
-        for item_text, code in self.all_items:
-            if text == item_text:
-                # User selected this item, don't filter
-                return
         
         # Clear and repopulate with filtered items
         self.combo.blockSignals(True)
-        current_text = self.combo.currentText()
         self.combo.clear()
         
         if not text:
-            # Show all items
+            # Show all items when search is empty
             for item_text, code in self.all_items:
                 self.combo.addItem(item_text, code)
         else:
-            # Filter items
-            text_lower = text.lower()
+            # Filter items using case-insensitive substring search
+            # Search in both the CPT code and description
+            text_lower = text.lower().strip()
             for item_text, code in self.all_items:
+                # Check if search text appears in the full item text (code or description)
                 if text_lower in item_text.lower():
                     self.combo.addItem(item_text, code)
         
@@ -154,6 +151,9 @@ class CPTSelector(QWidget):
         # Show popup if there are items and user is typing
         if self.combo.count() > 0 and text:
             self.combo.showPopup()
+        elif not text:
+            # Hide popup when search is cleared
+            self.combo.hidePopup()
     
     def _on_editing_finished(self):
         """Handle when user finishes editing the combobox text."""
@@ -207,10 +207,9 @@ class CPTSelector(QWidget):
         
         if cpt_code and cpt_code != self._last_selected_cpt:
             self._last_selected_cpt = cpt_code
-            # Make line edit read-only after selection to show selected value
-            line_edit = self.combo.lineEdit()
-            line_edit.setReadOnly(True)
+            # Keep line edit editable so user can continue searching
             # Set cursor to beginning to show first characters of the text
+            line_edit = self.combo.lineEdit()
             line_edit.setCursorPosition(0)
             # Emit signal and call callback to update taxonomy display
             self.cpt_changed.emit(cpt_code)

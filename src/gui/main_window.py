@@ -77,7 +77,7 @@ class MainWindow(QMainWindow):
         header_layout = QHBoxLayout()
         
         # Toggle button - dark blue
-        self.config_toggle_button = QPushButton("▼ Search Configuration")
+        self.config_toggle_button = QPushButton("▾ Search Configuration")
         self.config_toggle_button.setFont(MacOSTheme.get_font('heading'))
         self.config_toggle_button.setStyleSheet(f"""
             QPushButton {{
@@ -172,10 +172,10 @@ class MainWindow(QMainWindow):
         
         if self.config_expanded:
             self.config_content_widget.show()
-            self.config_toggle_button.setText("▼ Search Configuration")
+            self.config_toggle_button.setText("▾ Search Configuration")
         else:
             self.config_content_widget.hide()
-            self.config_toggle_button.setText("▶ Search Configuration")
+            self.config_toggle_button.setText("▸ Search Configuration")
     
     def collapse_config(self):
         """Collapse the config section."""

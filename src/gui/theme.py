@@ -1,6 +1,6 @@
 """Modern macOS theme for PyQt6 with clear, popping design."""
 
-from PyQt6.QtGui import QFont, QColor, QPalette
+from PyQt6.QtGui import QFont, QColor, QPalette, QFontDatabase
 from PyQt6.QtCore import Qt
 
 
@@ -31,31 +31,46 @@ class MacOSTheme:
     }
     
     # Typography - SF Pro style (Helvetica Neue as fallback)
-    FONTS = {
-        'title': QFont('SF Pro Display', 32, QFont.Weight.Bold),
-        'heading': QFont('SF Pro Display', 20, QFont.Weight.DemiBold),
-        'subheading': QFont('SF Pro Display', 18, QFont.Weight.Medium),
-        'body': QFont('SF Pro Text', 14, QFont.Weight.Normal),
-        'body_bold': QFont('SF Pro Text', 14, QFont.Weight.DemiBold),
-        'field_label': QFont('SF Pro Text', 14, QFont.Weight.DemiBold),
-        'caption': QFont('SF Pro Text', 13, QFont.Weight.Normal),
-        'mono': QFont('SF Mono', 12, QFont.Weight.Normal),
-    }
+    FONTS = {}
     
     # Set fallback fonts for macOS
     @classmethod
     def _init_fonts(cls):
         """Initialize fonts with fallbacks."""
-        # Try SF Pro fonts, fallback to system fonts
-        for font_name, font in cls.FONTS.items():
-            if font.family() not in ['SF Pro Display', 'SF Pro Text', 'SF Mono']:
-                # Fallback to Helvetica Neue or system default
-                if 'Display' in font_name or 'title' in font_name or 'heading' in font_name:
-                    font.setFamily('Helvetica Neue')
-                elif 'mono' in font_name:
-                    font.setFamily('Menlo')
-                else:
-                    font.setFamily('Helvetica Neue')
+        # Get available font families
+        try:
+            font_db = QFontDatabase()
+            available_families = set(font_db.families())
+        except Exception:
+            # Fallback if font database isn't available
+            available_families = set()
+        
+        def _get_font(font_name, fallbacks):
+            """Get font name from available fonts or fallbacks."""
+            if font_name in available_families:
+                return font_name
+            for fallback in fallbacks:
+                if fallback in available_families:
+                    return fallback
+            # Last resort: use the first fallback (Qt will handle it)
+            return fallbacks[0] if fallbacks else 'System'
+        
+        # Determine which fonts to use with fallback chains
+        display_font = _get_font('SF Pro Display', ['Helvetica Neue', 'Helvetica', 'Arial', 'System'])
+        text_font = _get_font('SF Pro Text', ['Helvetica Neue', 'Helvetica', 'Arial', 'System'])
+        mono_font = _get_font('SF Mono', ['Menlo', 'Monaco', 'Courier New', 'Courier', 'System'])
+        
+        # Initialize fonts with proper fallbacks
+        cls.FONTS = {
+            'title': QFont(display_font, 32, QFont.Weight.Bold),
+            'heading': QFont(display_font, 20, QFont.Weight.DemiBold),
+            'subheading': QFont(display_font, 18, QFont.Weight.Medium),
+            'body': QFont(text_font, 14, QFont.Weight.Normal),
+            'body_bold': QFont(text_font, 14, QFont.Weight.DemiBold),
+            'field_label': QFont(text_font, 14, QFont.Weight.DemiBold),
+            'caption': QFont(text_font, 13, QFont.Weight.Normal),
+            'mono': QFont(mono_font, 12, QFont.Weight.Normal),
+        }
     
     # Spacing - Modern and generous
     SPACING = {
